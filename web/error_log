@@ -1,0 +1,37 @@
+[13-Dec-2018 10:42:30 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:32 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:33 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:33 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:33 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:33 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:33 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:37 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:43 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:42:54 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:43:08 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:43:15 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:43:28 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:54:09 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:54:09 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:56:20 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:56:36 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 10:56:37 Europe/Istanbul] PHP Parse error:  syntax error, unexpected '.', expecting '&' or variable (T_VARIABLE) in /home/erenali/public_html/bgys/vendor/illuminate/support/helpers.php on line 554
+[13-Dec-2018 13:31:32 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/LoginForm.php on line 45
+[13-Dec-2018 13:31:35 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/LoginForm.php on line 45
+[13-Dec-2018 13:31:42 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/LoginForm.php on line 32
+[13-Dec-2018 13:31:52 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/LoginForm.php on line 52
+[13-Dec-2018 13:31:59 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\db\BaseActiveRecord::beforeSave() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 23
+[13-Dec-2018 13:32:30 Europe/Istanbul] PHP Fatal error:  Cannot make static method yii\db\ActiveRecord::tableName() non static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 23
+[13-Dec-2018 13:32:42 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\db\BaseActiveRecord::beforeSave() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 23
+[13-Dec-2018 13:32:49 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\base\Model::attributeLabels() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 23
+[13-Dec-2018 13:32:58 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\web\IdentityInterface::getId() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 24
+[13-Dec-2018 13:33:08 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\web\IdentityInterface::getAuthKey() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 24
+[13-Dec-2018 13:33:18 Europe/Istanbul] PHP Fatal error:  Cannot make non static method yii\web\IdentityInterface::validateAuthKey() static in class app\models\Userdb in /home/erenali/public_html/bgys/models/Userdb.php on line 24
+[13-Dec-2018 13:40:00 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/Userdb.php on line 99
+[13-Dec-2018 13:40:17 Europe/Istanbul] PHP Fatal error:  Using $this when not in object context in /home/erenali/public_html/bgys/models/Userdb.php on line 99
+[19-Dec-2018 23:16:17 Europe/Istanbul] PHP Fatal error:  Class 'app\models\Bgyseylemmatrisi' not found in /home/erenali/public_html/bgys/controllers/BgysvarlikenvanteriController.php on line 69
+[19-Dec-2018 23:17:55 Europe/Istanbul] PHP Fatal error:  Class 'yii\helpers\bgys' not found in /home/erenali/public_html/bgys/views/bgysvarlikenvanteri/index.php on line 76
+[19-Dec-2018 23:28:32 Europe/Istanbul] PHP Fatal error:  Class 'app\models\BgysfirmabilgiSearch' not found in /home/erenali/public_html/bgys/controllers/BgysfirmabilgiController.php on line 51
+[19-Dec-2018 23:29:35 Europe/Istanbul] PHP Fatal error:  Class 'app\models\Bgysfirmabilgi' not found in /home/erenali/public_html/bgys/models/BgysfirmabilgiSearch.php on line 14
+[19-Dec-2018 23:30:05 Europe/Istanbul] PHP Fatal error:  Class 'app\models\Firmabilgi' not found in /home/erenali/public_html/bgys/models/Bgysfirmadegerlendirme.php on line 75
+[19-Dec-2018 23:30:30 Europe/Istanbul] PHP Fatal error:  Class 'app\models\Firmabilgi' not found in /home/erenali/public_html/bgys/models/Bgysfirmadegerlendirme.php on line 75
