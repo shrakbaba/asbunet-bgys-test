@@ -88,26 +88,20 @@ class EnvcihazlisteController extends Controller
             }
         }
 
-               /*$yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
+                array_push($maillistesi,'ali.eren@asbu.edu.tr');
+                $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
                 if ($yonetimtemsilcisi) {
                     foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
-                    $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail;
+                    $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail[0];
                         array_push($maillistesi,$ldapObject);
                     }
-                }*/
-                array_push($maillistesi,'ali.eren@asbu.edu.tr');
-
-                //echo "<pre>";print_r($mailler);echo "<br>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-
+                }
+                //echo "<pre>";var_dump($maillistesi);Exit;
                 usort($mailler, function($a, $b) { return $a[0] <=> $b[0];   });  //çift katlı array i index e göre sıralama
 
-                //echo "<pre>";print_r($mailler);echo "<br>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-                //exit;
-
                 bgys::garantibildir($mailler, $maillistesi);
-                
-            
-        
+                //fopen('/var/www/html/bgys/web/uploads/denemeeme.txt', 'w');           
+                //return 1;
     }
 
     public function actionDashboard()
@@ -179,7 +173,7 @@ class EnvcihazlisteController extends Controller
                 }
 
                 return $this->render('dashboard',['tur'=>$turler2,'marka'=>$markalar2,'model'=>$modeller2,'markalardrill'=>$markalardrill,'modellerdrilldown'=>$modellerdrill2]);
-            }
+    }
 
     public function actionIndex()
     {
