@@ -57,6 +57,21 @@ class bgys
 	  return @$degerler[$id];
 	}
 
+	public static function garantibildir($data, $maillistesi)
+	{	
+
+		return Yii::$app->mailer->compose('garantisuresi', 
+			[
+				//'imageFileName' => 'https://asbunet.asbu.edu.tr/uploads/sem_turk_logo.jpg',
+				'maillistesi'=>$maillistesi,
+				'data'=>$data,
+			])
+		    ->setFrom([Yii::$app->params['mailadresi']=>'Garanti Süresi'])
+		    ->setTo($maillistesi)
+		    ->setSubject('Garanti Süresi Hatırlatma')
+		    ->send();
+	}
+
 	public static function mailikapat($uyaritarihi, $mailhesabi, $y, $maillistesi, $ayrilistarihi)
 	{	
 		return Yii::$app->mailer->compose('mailikapat', 
@@ -68,7 +83,7 @@ class bgys
 				'y'=>$y,
 				'ayrilistarihi'=>$ayrilistarihi
 			])
-		    ->setFrom(['bimteknik@kastamonu.edu.tr'=>'Hesap Kapatma'])
+		    ->setFrom([Yii::$app->params['mailadresi']=>'Hesap Kapatma'])
 		    ->setTo($maillistesi)
 		    ->setSubject('Hesap Kapatma Hatırlatması')
 		    ->send();
@@ -87,7 +102,7 @@ class bgys
 				'service_tag'=>$service_tag,
 				'bakimtarihi'=>$bakimtarihi
 			])
-		    ->setFrom(['bimteknik@kastamonu.edu.tr'=>'Bakım Hatırlatma'])
+		    ->setFrom([Yii::$app->params['mailadresi']=>'Bakım Hatırlatma'])
 		    ->setTo($maillistesi)
 		    ->setSubject('Yaklaşan Cihaz Bakımı')
 		    ->send();
@@ -108,47 +123,12 @@ class bgys
 		    ->send();
 	}
 
-	public static function onaymaili($tc,$ad,$soyad,$email,$onaykodu)
-	{	
-		$link=htmlspecialchars("hesaponayla?t=".$tc."&o=".$onaykodu);
-
-	   	return Yii::$app->mailer->compose('kullanicionay', 
-			[
-				//'imageFileName' => 'https://asbunet.asbu.edu.tr/uploads/sem_turk_logo.jpg',
-				'username'=>$tc,
-				'link'=>$link,
-				'ad'=>$ad,
-				'soyad'=>$soyad
-			])
-		    ->setFrom(['bimteknik@kastamonu.edu.tr'=>'Üyelik İşlemleri'])
-		    ->setTo($email)
-		    ->setSubject('Üyelik İşlemleri')
-		    ->send();
-	}
-
 	public static function ozetdurum($id)
 	{
 	  $degerler = array(1 => "Risk Azalmış" ,2=>'Risk Artmış',3=>'Değişim Yok');
 	  return $degerler[$id];
 	}
 
-	public static function sifirlamamaili($username,$ad,$soyad,$email,$onaykodu)
-	{	
-		$link=htmlspecialchars("reset?t=".$username."&o=".$onaykodu);
-
-	   	return Yii::$app->mailer->compose('sifirlama', 
-			[
-				//'imageFileName' => 'https://asbunet.asbu.edu.tr/uploads/sem_turk_logo.jpg',
-				'username'=>$username,
-				'link'=>$link,
-				'ad'=>$ad,
-				'soyad'=>$soyad
-			])
-		    ->setFrom(['bimteknik@kastamonu.edu.tr'=>'Üyelik İşlemleri'])
-		    ->setTo($email)
-		    ->setSubject('Üyelik İşlemleri')
-		    ->send();
-	}
 
 	
 

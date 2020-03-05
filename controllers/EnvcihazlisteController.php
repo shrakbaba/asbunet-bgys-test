@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Envcihazliste;
 use app\models\EnvcihazlisteSearch;
+use app\models\Authassignment;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -29,6 +30,11 @@ class EnvcihazlisteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
+                        'actions' => ['mailat'],
+                        'roles' => [],
+                    ],
+                    [
+                        'allow' => true,
                         'actions' => ['index','view','dashboard'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
@@ -48,6 +54,60 @@ class EnvcihazlisteController extends Controller
                 ],
             ],
         ];
+    }
+
+    public function actionMailat()  //bakım kayıtlarının hatırlatması için crobtab ile çağırılacak
+    {
+        $cihazlar=Envcihazliste::find()->all();
+        if (count($cihazlar)!=0) {
+
+            $birayliklar=[];
+            $ucayliklar=[];
+            $altiayliklar=[];
+            $mailler=[];
+            $maillistesi=[];
+
+            foreach ($cihazlar as $key => $value) {
+                $biraykaldi =date('Y-m-d',strtotime("-1 days",strtotime("-1 months", strtotime($value->garanti_bitis))));
+                $ucaykaldi  =date('Y-m-d',strtotime("-1 days",strtotime("-3 months", strtotime($value->garanti_bitis))));
+                $altiaykaldi=date('Y-m-d',strtotime("-1 days",strtotime("-6 months", strtotime($value->garanti_bitis)))); 
+
+                $b = [$value->cihazTuru->cihaz_turu, $value->marka->marka, $value->model->model, $value->alim_tarihi, $value->garanti_bitis, $value->key];
+                
+                if ($value->zimmet) {        array_push($maillistesi,$value->zimmet0->email);       }
+
+                if (date('Y-m-d')==$altiaykaldi)   {       $a=[6]; /*array_push($birayliklar,$a);*/        } 
+                elseif (date('Y-m-d')==$ucaykaldi) {       $a=[3]; /*array_push($ucayliklar,$a);   */      } 
+                elseif (date('Y-m-d')==$biraykaldi){       $a=[1]; /*array_push($altiayliklar,$a);   */    }
+                else                               {       $a=[0]; /*array_push($altiayliklar,$a);   */    }
+                array_push($a,$b);
+                if ($a[0]!=0) {             
+                    array_push($mailler,$a);
+                }
+                //echo "<pre>";var_dump($a);exit;
+            }
+        }
+
+               /*$yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
+                if ($yonetimtemsilcisi) {
+                    foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
+                    $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail;
+                        array_push($maillistesi,$ldapObject);
+                    }
+                }*/
+                array_push($maillistesi,'ali.eren@asbu.edu.tr');
+
+                //echo "<pre>";print_r($mailler);echo "<br>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+                usort($mailler, function($a, $b) { return $a[0] <=> $b[0];   });  //çift katlı array i index e göre sıralama
+
+                //echo "<pre>";print_r($mailler);echo "<br>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                //exit;
+
+                bgys::garantibildir($mailler, $maillistesi);
+                
+            
+        
     }
 
     public function actionDashboard()
@@ -147,7 +207,6 @@ class EnvcihazlisteController extends Controller
         ]);
     }
 
-
     public function actionCreate()
     {
         $model = new Envcihazliste();
@@ -172,7 +231,9 @@ class EnvcihazlisteController extends Controller
                         if ($model->save()) {
                             $model->file->saveAs($path);
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz tanımlandı','cihaz:'.$model->id );
-                            return $this->redirect(['view', 'id' => $model->id]);
+                            //return $this->redirect(['view', 'id' => $model->id]);                            
+                            //return $this->redirect(['index']);
+                            return $this->redirect(Yii::$app->request->referrer);
                         }else{
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                             return $this->redirect(['index']);
@@ -217,8 +278,9 @@ class EnvcihazlisteController extends Controller
                             
                         if ($model->save()) {
                             $model->file->saveAs($path);
-            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz guncellendi','cihaz:'.$model->id );
-                            return $this->redirect(['view', 'id' => $model->id]);
+                            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz guncellendi','cihaz:'.$model->id );
+                            //return $this->redirect(['view', 'id' => $model->id]);
+                            return $this->redirect(Yii::$app->request->referrer);
                         }else{
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                             return $this->redirect(['index']);
