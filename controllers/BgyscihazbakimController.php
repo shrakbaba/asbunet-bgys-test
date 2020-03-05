@@ -97,19 +97,11 @@ class BgyscihazbakimController extends Controller
                         //1 hafta kaldı bakıma
                         bgys::bakima1hafta(imdat::mysqltowebdate($uyaritarihi), $marka, $model, $key, $service_tag, $maillistesi, imdat::mysqltowebdate($bakimtarihi));
                     }
-                    // echo "<pre>";var_dump($ilkuyaritarihi);echo "<pre>";
                 }
-               
-                //echo "<pre>";var_dump(date('Y-m-d'));
-
-                //echo "<pre>";var_dump($value->periyod);exit;
             }
         }
     }
-    /**
-     * Lists all Bgyscihazbakim models.
-     * @return mixed
-     */
+
     public function actionIndex()
     {
         $searchModel = new BgyscihazbakimSearch();
@@ -121,12 +113,6 @@ class BgyscihazbakimController extends Controller
         ]);
     }
 
-    /**
-     * Displays a single Bgyscihazbakim model.
-     * @param integer $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionView($id)
     {
         return $this->render('view', [

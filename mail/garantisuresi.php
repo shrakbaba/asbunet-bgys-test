@@ -1,11 +1,11 @@
 <?php 
 use yii\helpers\imdat;
+
 ?>
 <h3>Garanti süresi hatırlatması</h3>   
-
 <table>
-    <tr class="alert alert-info">
-        <td  style="color:red">Cihaz Türü</td>
+    <tr>
+        <td>Cihaz Türü</td>
         <td>Marka</td>
         <td>Model</td>
         <td>Alım Tarihi</td>
@@ -17,7 +17,7 @@ use yii\helpers\imdat;
         foreach ($data as $key => $value) {
             if ($value[0]==1) {
     ?>
-                <tr class="alert alert-danger" >
+                <tr>
                     <td><?= $value[1][0] ?></td>
                     <td><?= $value[1][1] ?></td>
                     <td><?= $value[1][2] ?></td>
@@ -28,7 +28,7 @@ use yii\helpers\imdat;
     <?php
             }elseif ($value[0]==3) {
     ?><hr>
-                <tr class="alert alert-warning">
+                <tr>
                     <td><?= $value[1][0] ?></td>
                     <td><?= $value[1][1] ?></td>
                     <td><?= $value[1][2] ?></td>
@@ -40,7 +40,7 @@ use yii\helpers\imdat;
 
             }elseif ($value[0]==6) {
     ?><hr>
-                <tr class="alert alert-success">
+                <tr>
                     <td><?= $value[1][0] ?></td>
                     <td><?= $value[1][1] ?></td>
                     <td><?= $value[1][2] ?></td>
