@@ -89,6 +89,9 @@ class EnvcihazlisteController extends Controller
         }
 
                 array_push($maillistesi,'ali.eren@asbu.edu.tr');
+                array_push($maillistesi,'zafer.buldu@asbu.edu.tr');
+                array_push($maillistesi,'beste.altinay@asbu.edu.tr');
+
                 $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
                 if ($yonetimtemsilcisi) {
                     foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
