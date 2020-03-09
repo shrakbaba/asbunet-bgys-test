@@ -60,7 +60,6 @@ class EnvcihazlisteController extends Controller
     {
         $cihazlar=Envcihazliste::find()->all();
         if (count($cihazlar)!=0) {
-
             $birayliklar=[];
             $ucayliklar=[];
             $altiayliklar=[];
@@ -76,10 +75,10 @@ class EnvcihazlisteController extends Controller
                 
                 if ($value->zimmet) {        array_push($maillistesi,$value->zimmet0->email);       }
 
-                if (date('Y-m-d')==$altiaykaldi)   {       $a=[6]; /*array_push($birayliklar,$a);*/        } 
-                elseif (date('Y-m-d')==$ucaykaldi) {       $a=[3]; /*array_push($ucayliklar,$a);   */      } 
-                elseif (date('Y-m-d')==$biraykaldi){       $a=[1]; /*array_push($altiayliklar,$a);   */    }
-                else                               {       $a=[0]; /*array_push($altiayliklar,$a);   */    }
+                if (date('Y-m-d')==$altiaykaldi)   {   $a=[6]; /*array_push($birayliklar,$a);   */    } 
+                elseif (date('Y-m-d')==$ucaykaldi) {   $a=[3]; /*array_push($ucayliklar,$a);    */    } 
+                elseif (date('Y-m-d')==$biraykaldi){   $a=[1]; /*array_push($altiayliklar,$a);  */    }
+                else                               {   $a=[0]; /*array_push($altiayliklar,$a);  */    }
                 array_push($a,$b);
                 if ($a[0]!=0) {             
                     array_push($mailler,$a);
@@ -87,24 +86,25 @@ class EnvcihazlisteController extends Controller
                 //echo "<pre>";var_dump($a);exit;
             }
         }
+        array_push($maillistesi,'ali.eren@asbu.edu.tr');
+        array_push($maillistesi,'zafer.buldu@asbu.edu.tr');
+        array_push($maillistesi,'beste.altinay@asbu.edu.tr');
 
-                array_push($maillistesi,'ali.eren@asbu.edu.tr');
-                array_push($maillistesi,'zafer.buldu@asbu.edu.tr');
-                array_push($maillistesi,'beste.altinay@asbu.edu.tr');
-
-                $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
-                if ($yonetimtemsilcisi) {
-                    foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
-                    $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail[0];
-                        array_push($maillistesi,$ldapObject);
-                    }
-                }
-                //echo "<pre>";var_dump($maillistesi);Exit;
-                usort($mailler, function($a, $b) { return $a[0] <=> $b[0];   });  //çift katlı array i index e göre sıralama
-
-                bgys::garantibildir($mailler, $maillistesi);
-                //fopen('/var/www/html/bgys/web/uploads/denemeeme.txt', 'w');           
-                //return 1;
+        $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
+        if ($yonetimtemsilcisi) {
+            foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
+            $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail[0];
+                array_push($maillistesi,$ldapObject);
+            }
+        }
+        usort($mailler, function($a, $b) { return $a[0] <=> $b[0];   });  //çift katlı array i index e göre sıralama
+        if (count($mailler) and count($maillistesi))
+        {
+            bgys::garantibildir($mailler, $maillistesi);
+        }
+        
+        //fopen('/var/www/html/bgys/web/uploads/denemeeme.txt', 'w');           
+        //return 1;
     }
 
     public function actionDashboard()
