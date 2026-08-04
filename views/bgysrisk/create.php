@@ -6,6 +6,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgysrisk */
 
+$this->title = 'Risk Ekle';
 $this->params['breadcrumbs'][] = ['label' => 'Riskler', 'url' => ['index']];
 ?>
 <div class="bgysrisk-create">

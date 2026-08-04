@@ -9,6 +9,7 @@ use app\models\Bgysrisk;
 use yii\widgets\Pjax;
 use yii\bootstrap\Modal;
 use yii\helpers\ArrayHelper;
+use app\models\Userbilgi;
 /* @var $this yii\web\View */
 /* @var $searchModel app\models\BgysizlemeolcmeSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -46,37 +47,30 @@ a:-webkit-any-link {
         //$yil=2019;
         $searchModel = new BgysizlemeolcmeSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $dataProvider->query->where('yil = '.$yil);
+        $dataProvider->query->andWhere(['yil' => $yil]);
 
         $gridColumns=[
             [
                 'class' => 'kartik\grid\SerialColumn',
                 'contentOptions' => ['class' => 'kartik-sheet-style'],  
-                //'width' => '2%',
+                'width' => '2%',
                 'header' => '',
                 'headerOptions' => ['class' => 'kartik-sheet-style']
             ],
-            /*[
-                'class' => 'kartik\grid\ExpandRowColumn',
-                //'width' => '2%',
-                'value' => function ($model, $key, $index, $column) {
-                    return GridView::ROW_COLLAPSED;
-                },
-                'detail' => function ($model, $key, $index, $column) {
-                    return Yii::$app->controller->renderPartial('_expand-row-details');
-                },
-                'headerOptions' => ['class' => 'kartik-sheet-style'], 
-                //'expandOneOnly' => true
-            ],*/
-            //'id',
-            //'yil',
-            'kontrol',
-            'hedef_degeri',
-           // 'olcum_sikligi',
+            [
+                'attribute'=>'kontrol',
+                'format'=>'raw',     
+                'width' => '20%'                
+            ],
+            [
+                'attribute'=>'hedef_degeri',
+                'format'=>'raw',     
+                'width' => '10%'                
+            ],
             [
                 'attribute'=>'olcum_sikligi',
-                'format'=>'raw',                
-                //'filter'=>array(1 =>"Yılda 1", 2 =>"6 Ayda bir", 3 =>"3 Ayda 1", 4 =>"Ayda 1"),
+                'format'=>'raw',     
+                'width' => '5%',             
                 'value'=>function ($data)
                     {
                         return 
@@ -95,32 +89,51 @@ a:-webkit-any-link {
                         ; 
                     }
             ],
+            [
+                'attribute'=>'planlanan_tarihi',   
+                'width' => '5%',  
+                'format' => ['date', 'php:d/m/Y'], 
+            ],
+            [
+                'attribute'=>'kontrol_kriteri',   
+                'width' => '25%',  
+            ],
             //'planlanan_tarihi',
             //'olcum_sonucu',
             //'kontrol_kriteri',
-            //'sorumlu',
+            [
+                'attribute'=>'sorumlu',
+                'value'=>function ($data)
+                    {
+                        return @Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->soyad.' / '.@$data->sorumlu0->username ;
+                    },
+                'label'=>'Sorumlu', 
+                'width' => '15%',  
+            ],
             //'olusturma_tarihi',                    
             [
                 'class' => 'yii\grid\ActionColumn',
+                'header'=>'İşlemler',
+                'contentOptions' => ['class' => 'bgys-grid-actions'],
                 'template' => '{view}{update}{delete}{kayitgir}' ,  
                 'buttons' => [                                      
                     'view' => function ($url,$model) {
                         return  ( 
                             // Html::a('<span class="glyphicon glyphicon-eye-open">', ['view','id'=>$model->id], ['class' => 'btn btn-success','title'=>"İncele"] )
 
-                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success' ,'title'=>"İncele"])                      
+                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])                      
                             );
                          },
                     'update' => function ($url,$model) {
                         return  ( 
-                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning' ,'title'=>"Güncelle"])                         
+                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"])                         
                             );
                          },
                     'delete' => function ($url,$model) {
                         return  (  
                             Html::a('<span class="glyphicon glyphicon-trash"></span>', 
                                                 ['delete', 'id'=>$model->id] ,
-                                                [   'class' => 'btn btn-danger',
+                                                [   'class' => 'btn btn-danger btn-xs',
                                                     'data-pjax' => '0',
                                                     'title'=>"Sil",
                                                     'data' => [
@@ -131,12 +144,22 @@ a:-webkit-any-link {
                             );
                          },
                     'kayitgir' => function ($url,$model) {
-                        return  (   (bgys::olcmesorumlumu($model->id) or Yii::$app->user->can('bilgiislem_admin')) 
-                            ? Html::button('<span class="glyphicon glyphicon-thumbs-up">', ['value' => Url::to(['kayitgir','id'=>$model->id]),'class' => 'modalButton5 btn btn-info' ,'title'=>"İşlem Gir"]) 
-                            : ""               
-                        
-                        );
-                         },
+                        return  (  
+                            ((bgys::olcmesorumlumu($model->id) or Yii::$app->user->can('bilgiislem_admin')) and !bgys::islemgirilmemis($model->id)) 
+                            ?
+                                Html::a('<span class="glyphicon glyphicon-thumbs-up"></span>', 
+                                    ['kayitgir', 'id'=>$model->id] ,
+                                    [   'class' => 'btn btn-info btn-xs',
+                                        'data-pjax' => '0',
+                                        'title'=>"İşlem Gir",
+                                        'data' => [
+                                            'confirm' => 'Bu kayıt için sonuç girmek istediğinizden emin misiniz?',
+                                            'method' => 'post',
+                                        ]
+                                    ]) 
+                            :""                    
+                            );
+                         }
                 ]
             ],
         ];
@@ -169,7 +192,7 @@ a:-webkit-any-link {
         'hover' => true,
         //'showPageSummary' => true,
         'panel' => [
-            'heading' => 'Risk Analizi', 
+            'heading' => 'Analiz Listesi', 
             'type' => GridView::TYPE_PRIMARY, 
             
         ], 
@@ -182,3 +205,69 @@ a:-webkit-any-link {
     ]);  ?>
     <?php Pjax::end(); ?>
 </div>
+
+
+<?php $this->registerJs(
+'function init_click_handlers(){
+       $(".modalButton2").click(function() {
+        //alert(fID);
+            $.get(
+                "create",
+                function (data)
+                {
+                    $("#modal").find(".modal-body").html(data);
+                    $(".modal-body").html(data);
+                    $("#modal").modal("show");              
+                }    
+            );    
+    }); $(".modalButton3").click(function() {
+        var fID = $(this).closest("tr").data("key");
+        //alert(fID);
+            $.get(
+                "update",
+                {  id: fID   },
+                function (data)
+                {
+                    $("#modal").find(".modal-body").html(data);
+                    $(".modal-body").html(data);
+                    $("#modal").modal("show");              
+                }    
+            );    
+    });
+    $(".modalButton4").click(function() {
+        var fID = $(this).closest("tr").data("key");
+        //alert(fID);
+            $.get(
+                "view",
+                {  id: fID   },
+                function (data)
+                {
+                    $("#modal").find(".modal-body").html(data);
+                    $(".modal-body").html(data);
+                    $("#modal").modal("show");              
+                }    
+            );    
+    });
+    $(".mdBtnKayitGir").click(function() {
+        var fID = $(this).closest("tr").data("key");
+        //alert(fID);
+            $.get(
+                "kayitgir",
+                {  id: fID   },
+                function (data)
+                {
+                    $("#modal").find(".modal-body").html(data);
+                    $(".modal-body").html(data);
+                    $("#modal").modal("show");              
+                }    
+            );    
+    });
+
+};
+
+init_click_handlers(); //first run
+$("#some_pjax_id").on("pjax:success", function() {
+  init_click_handlers(); //reactivate links in grid after pjax update
+});
+
+');?>

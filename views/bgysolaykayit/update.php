@@ -12,7 +12,9 @@ $this->params['breadcrumbs'][] = 'Güncelle';
 ?>
 <div class="olaykayit-update">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <?php if (!Yii::$app->request->isAjax) { ?>
+        <h1><?= Html::encode($this->title) ?></h1>
+    <?php } ?>
 
     <?= $this->render('_form', [
         'model' => $model,

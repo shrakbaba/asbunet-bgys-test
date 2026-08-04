@@ -24,6 +24,12 @@ class EnvmodelController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -101,7 +107,8 @@ class EnvmodelController extends Controller
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
 
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'model guncellendi','model:'.$model->model );
-            return $this->redirect(['view', 'id' => $model->id]);
+            
+            return $this->redirect(Yii::$app->request->referrer);
         }
 
         return $this->renderAjax('update', [

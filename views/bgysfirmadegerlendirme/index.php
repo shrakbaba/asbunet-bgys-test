@@ -12,7 +12,7 @@ use app\models\Userbilgi;
 /* @var $searchModel app\models\FirmadegerlendirmeSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Değerlendirme';
+$this->title = 'Tedarikçi Değerlendirme';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <style>
@@ -28,6 +28,8 @@ td {
 <div class="firmadegerlendirme-index">
 
         <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+        <h1><?= Html::encode($this->title) ?></h1>
+
         <p>
         <?= Html::button('Değerlendirme Yap', ['value' => Url::to(['bgysfirmadegerlendirme/create']),'class' => 'btn btn-success btn-lg modalButton2']) ?>
         </p> 
@@ -111,6 +113,7 @@ Modal::end();
             'kriter12',*/
 
             ['class' => 'yii\grid\ActionColumn',
+                'header'=>'İşlemler',
                 'headerOptions' => ['style' => 'width:10%'],
                 'template' =>'{view} {update} {delete} {onay} {onaykaldir}',
                 'buttons' => [                                  
@@ -118,13 +121,13 @@ Modal::end();
                         return  ( 
                             // Html::a('<span class="glyphicon glyphicon-eye-open">', ['view','id'=>$model->id], ['class' => 'btn btn-success','title'=>"İncele"] )
 
-                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success' ,'title'=>"İncele"])                      
+                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])                      
                             );
                          },
                     'update' => function($url, $model) {   //hertürlü
                         return (!$model->onay) 
                             ?                            
-                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning' ,'title'=>"Güncelle"]) 
+                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"]) 
                             :
                             null;
                     },
@@ -133,7 +136,7 @@ Modal::end();
                             ? 
                             Html::a('<span class="glyphicon glyphicon-trash"></span>', 
                                                 ['delete', 'id'=>$model->id] ,
-                                                [   'class' => 'btn btn-danger',
+                                                [   'class' => 'btn btn-danger btn-xs',
                                                     'data-pjax' => '0',
                                                     'title'=>"Sil",
                                                     'data' => [
@@ -168,4 +171,3 @@ Modal::end();
     <?php Pjax::end(); ?>
 </div>
     
-

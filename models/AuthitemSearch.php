@@ -41,7 +41,7 @@ class AuthitemSearch extends Authitem
      */
     public function search($params)
     {
-        $query = Authitem::find();
+        $query = Authitem::find()->where(['type' => 1]);
 
         // add conditions that should always apply here
 
@@ -59,7 +59,6 @@ class AuthitemSearch extends Authitem
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'type' => $this->type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ]);

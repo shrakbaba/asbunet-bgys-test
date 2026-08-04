@@ -47,6 +47,30 @@ class Authitem extends \yii\db\ActiveRecord
         ];
     }
 
+    public function beforeValidate()
+    {
+        if (parent::beforeValidate()) {
+            $this->type = 1;
+            return true;
+        }
+
+        return false;
+    }
+
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            $time = time();
+            if ($insert && !$this->created_at) {
+                $this->created_at = $time;
+            }
+            $this->updated_at = $time;
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */

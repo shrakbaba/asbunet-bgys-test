@@ -12,11 +12,11 @@ use yii\widgets\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'ad')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'ad')->textInput(['maxlength' => true, 'readonly' => true]) ?>
 
-    <?= $form->field($model, 'soyad')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'soyad')->textInput(['maxlength' => true, 'readonly' => true]) ?>
 
-    <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'email')->textInput(['maxlength' => true, 'readonly' => true]) ?>
 
     <?= $form->field($model, 'tc')->textInput(['maxlength' => true]) ?>
 
@@ -29,7 +29,7 @@ use yii\widgets\ActiveForm;
     <?php // $form->field($model, 'kisi_id')->textInput() ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

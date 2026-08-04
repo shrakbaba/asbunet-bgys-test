@@ -81,8 +81,15 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'link')->textInput(['maxlength' => true])->textarea(['rows' => '1']) ?>
     
     <?php if($model->dosya) {
-        ?> <a class ="btn btn-info" style="float: right" href="pdfsil?i=<?php echo $model->id; ?>"> PDF Belgesini Sil</a>
-    <?php } ?>
+        echo Html::a('PDF Belgesini Sil', ['pdfsil', 'i' => $model->id], [
+            'class' => 'btn btn-info',
+            'style' => 'float: right',
+            'data' => [
+                'confirm' => 'Bu kaydın dosyasını silmek istediğinizden emin misiniz?',
+                'method' => 'post',
+            ],
+        ]);
+    } ?>
 
      <?= $form->field($model, 'file')->widget(FileInput::classname(), [
                                'pluginOptions'=>

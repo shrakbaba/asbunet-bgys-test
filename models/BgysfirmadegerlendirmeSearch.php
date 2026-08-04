@@ -76,7 +76,8 @@ class BgysfirmadegerlendirmeSearch extends Bgysfirmadegerlendirme
         ]);
 
         $dataProvider->setSort(['defaultOrder' => [
-            'toplam' => SORT_DESC
+            'degerlendirilenyil' => SORT_DESC,
+            'toplam' => SORT_DESC,
             ]
         ]);
 

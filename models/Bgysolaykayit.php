@@ -37,7 +37,7 @@ class Bgysolaykayit extends \yii\db\ActiveRecord
             [['olaytarihi', 'mudahaletarihi'], 'safe'],
             [['konu', 'mudahaleeden', 'belge'], 'string', 'max' => 255],
             [['yapilanmudahale', 'sonuc', 'onlem'], 'string', 'max' => 1500],
-            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','maxSize' => 1024 * 1024 * 1],  //max 1Mb
+            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 1,'maxFiles' => 10,'tooBig' => '"{file}" dosyası çok büyük. Boyutu 1 MB değerinden büyük olamaz.'],  //max 1 MB
         ];
     }
 
@@ -69,5 +69,10 @@ class Bgysolaykayit extends \yii\db\ActiveRecord
             $this->hasOne(\Edvlerblog\Adldap2\model\UserDbLdap::className(), ['id' => 'userid'])
         :
             $this->hasOne(Userdb::className(), ['id' => 'userid']);
+    }
+
+    public function getBelgeler()
+    {
+        return $this->hasMany(Bgysolaykayitbelge::className(), ['olay_id' => 'id']);
     }
 }

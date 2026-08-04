@@ -24,6 +24,13 @@ class EnvcihazlisteController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                    'pdfsil' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'user'=>'user',
@@ -58,6 +65,8 @@ class EnvcihazlisteController extends Controller
 
     public function actionMailat()  //bakım kayıtlarının hatırlatması için crobtab ile çağırılacak
     {
+        bgys::cronErisiminiDogrula();
+
         $cihazlar=Envcihazliste::find()->all();
         if (count($cihazlar)!=0) {
             $birayliklar=[];
@@ -73,7 +82,12 @@ class EnvcihazlisteController extends Controller
 
                 $b = [$value->cihazTuru->cihaz_turu, $value->marka->marka, $value->model->model, $value->alim_tarihi, $value->garanti_bitis, $value->key];
                 
-                if ($value->zimmet) {        array_push($maillistesi,$value->zimmet0->email);       }
+                if ($value->zimmet) {
+                    $zimmetEmail = bgys::zimmetEmail($value->zimmet);
+                    if ($zimmetEmail) {
+                        array_push($maillistesi, $zimmetEmail);
+                    }
+                }
 
                 if (date('Y-m-d')==$altiaykaldi)   {   $a=[6]; /*array_push($birayliklar,$a);   */    } 
                 elseif (date('Y-m-d')==$ucaykaldi) {   $a=[3]; /*array_push($ucayliklar,$a);    */    } 
@@ -86,17 +100,15 @@ class EnvcihazlisteController extends Controller
                 //echo "<pre>";var_dump($a);exit;
             }
         }
-        array_push($maillistesi,'ali.eren@asbu.edu.tr');
-        array_push($maillistesi,'zafer.buldu@asbu.edu.tr');
-        array_push($maillistesi,'beste.altinay@asbu.edu.tr');
+        $maillistesi = bgys::mailListesiOlustur('cihazGaranti', $maillistesi);
 
-        $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
+        /*$yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
         if ($yonetimtemsilcisi) {
             foreach ($yonetimtemsilcisi as $key2 => $value2) {                      
             $ldapObject = @\Yii::$app->ad->search()->findBy('sAMAccountname', @$value2->user->username)->mail[0];
                 array_push($maillistesi,$ldapObject);
             }
-        }
+        }*/
         usort($mailler, function($a, $b) { return $a[0] <=> $b[0];   });  //çift katlı array i index e göre sıralama
         if (count($mailler) and count($maillistesi))
         {
@@ -109,6 +121,13 @@ class EnvcihazlisteController extends Controller
 
     public function actionDashboard()
     {
+        $turler2 = [];
+        $markalar2 = [];
+        $modeller2 = [];
+        $markalardrill = [];
+        $modellerdrill = [];
+        $modellerdrill2 = [];
+
         $turler = (new \yii\db\Query())
         ->select(['sum(adet) as adet', 't.cihaz_turu'])
         ->from('env_cihaz_liste l')
@@ -146,11 +165,11 @@ class EnvcihazlisteController extends Controller
             foreach ($markalardrill as $key => $value) { 
                 $marka=$value['name'];
                 $modellerdrill[$key] = (new \yii\db\Query())
-                ->select(['count(*) as adet', 'm.model','a.marka' ])
+                ->select(['sum(l.adet) as adet', 'm.model','a.marka' ])
                 ->from('env_cihaz_liste l')
                 ->leftJoin('env_model m', 'm.id=l.model_id')
                 ->leftJoin('env_marka a', 'a.id=m.marka_id')
-                ->where('a.marka="'.$marka.'"')
+                ->where(['a.marka' => $marka])
                 ->groupBy(['l.model_id'])
                     ->all(); // markanın modellerinin urun adetleri drille gore     
                 }
@@ -165,7 +184,7 @@ class EnvcihazlisteController extends Controller
 
                 }    
                 $modeller = (new \yii\db\Query())
-                ->select(['count(*) as adet', 'm.model'])
+                ->select(['sum(l.adet) as adet', 'm.model'])
                 ->from('env_cihaz_liste l')
                 ->leftJoin('env_model m', 'm.id=l.model_id')
                 ->groupBy(['l.model_id'])
@@ -241,7 +260,7 @@ class EnvcihazlisteController extends Controller
                         }
                 }  else{
                     if ($model->save()) { 
-                        return $this->redirect(['view', 'id' => $model->id]);
+                        return $this->redirect(Yii::$app->request->referrer);
                     }
                 } 
                 
@@ -288,7 +307,7 @@ class EnvcihazlisteController extends Controller
                         }
                 }  else{
                     if ($model->save()) { 
-                        return $this->redirect(['view', 'id' => $model->id]);
+                            return $this->redirect(Yii::$app->request->referrer);
                     }
                 } 
 

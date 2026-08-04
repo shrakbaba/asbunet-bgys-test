@@ -26,6 +26,12 @@ class BgysvarlikenvanteriController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -90,8 +96,8 @@ class BgysvarlikenvanteriController extends Controller
             $model->varlik_degeri=round(($model->gizlilik+$model->erisilebilirlik+$model->butunluk)/3);
            
             if ($model->save()) {
-            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'varlik tanımlandı','varlik:'.$model->varlik_adi );
-                return $this->redirect(['view', 'id' => $model->id]);
+            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'varlik tanımlandı','varlik:'.$model->varlik_adi );                
+                        return $this->redirect(Yii::$app->request->referrer);
             }else{
                 Yii::$app->session->setFlash('error','Kayıt sırasında hata oluştu.');                
                 return $this->redirect(['index']);
@@ -112,7 +118,8 @@ class BgysvarlikenvanteriController extends Controller
            
             if ($model->save()) {
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'varlik guncellendi','varlik:'.$model->varlik_adi );
-                return $this->redirect(['view', 'id' => $model->id]);
+                
+                        return $this->redirect(Yii::$app->request->referrer);
             }else{
                 Yii::$app->session->setFlash('error','Kayıt sırasında hata oluştu.');                
                 return $this->redirect(['index']);

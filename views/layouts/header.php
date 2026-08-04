@@ -72,7 +72,7 @@ use app\models\Userbilgi;
                                     <?= Html::a(
                                         'Çıkış Yap',
                                         ['/site/logout'],
-                                        ['data-method' => 'post', 'class' => 'btn btn-default btn-xs']
+                                        ['data-method' => 'post', 'class' => 'btn btn-alert btn-xs']
                                     ) ?>
                                 </div>
                             <?php } ?>

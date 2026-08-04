@@ -6,7 +6,8 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Authitem */
 
-$this->params['breadcrumbs'][] = ['label' => 'Rbac Nesneleri', 'url' => ['index']];
+$this->title = 'Yeni Rol Ekle';
+$this->params['breadcrumbs'][] = ['label' => 'Roller', 'url' => ['index']];
 ?>
 <div class="authitem-create">
 

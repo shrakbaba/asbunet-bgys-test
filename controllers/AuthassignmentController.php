@@ -16,24 +16,37 @@ use yii\helpers\bgys;
  */
 class AuthassignmentController extends Controller
 {
+    private const BGYS_ROLE_DESCRIPTIONS = [
+        'BGYS_Super_Admin' => 'BGYS tüm yetkilere sahip',
+        'BGYS_Ekip_Lideri' => 'BGYS ekip lideri',
+        'BGYS_Ekip_Uyesi' => 'BGYS ekip üyesi',
+        'BGYS_Yonetim_Temsilcisi' => 'BGYS yönetim temsilcisi',
+    ];
+
     /**
      * {@inheritdoc}
      */
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
                         'actions' => ['index','view'],
-                        'roles' => ['BGYS_Yonetim_Temsilcisi'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                         'allow' => true,
                         'actions' => ['create','update','delete'],
-                        'roles' => ['BGYS_Yonetim_Temsilcisi'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                       'allow' => false,
@@ -61,7 +74,9 @@ class AuthassignmentController extends Controller
 
     public function actionView($item_name, $user_id)
     {
-        return $this->render('view', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('view', [
             'model' => $this->findModel($item_name, $user_id),
         ]);
     }
@@ -70,10 +85,21 @@ class AuthassignmentController extends Controller
     {
         $model = new Authassignment();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'yetki atama','atama:'.$model->user_id."<=".$model->item_name );
-            //return $this->redirect(['view', 'item_name' => $model->item_name, 'user_id' => $model->user_id]);
-            return $this->redirect(['index']);
+        if ($model->load(Yii::$app->request->post())) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                if ($model->save()) {
+                    $this->syncAsbunetAssignment($model->item_name, $model->user_id);
+                    bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'yetki atama','atama:'.$model->user_id."<=".$model->item_name );
+                    $transaction->commit();
+                    //return $this->redirect(['view', 'item_name' => $model->item_name, 'user_id' => $model->user_id]);
+                    return $this->redirect(['index']);
+                }
+                $transaction->rollBack();
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', 'Rol ataması yapılırken hata oluştu.');
+            }
         }
 
         return $this->renderAjax('create', [
@@ -84,14 +110,30 @@ class AuthassignmentController extends Controller
     public function actionUpdate($item_name, $user_id)
     {
         $model = $this->findModel($item_name, $user_id);
+        $oldItemName = $model->item_name;
+        $oldUserId = $model->user_id;
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'yetki guncelleme','atama:'.$model->user_id."<=".$model->item_name );
-           // return $this->redirect(['view', 'item_name' => $model->item_name, 'user_id' => $model->user_id]);
-            return $this->redirect(['index']);
+        if ($model->load(Yii::$app->request->post())) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                if ($model->save()) {
+                    $this->removeAsbunetAssignment($oldItemName, $oldUserId);
+                    $this->syncAsbunetAssignment($model->item_name, $model->user_id);
+                    bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'yetki guncelleme','atama:'.$model->user_id."<=".$model->item_name );
+                    $transaction->commit();
+                   // return $this->redirect(['view', 'item_name' => $model->item_name, 'user_id' => $model->user_id]);
+                    return $this->redirect(['index']);
+                }
+                $transaction->rollBack();
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', 'Rol ataması güncellenirken hata oluştu.');
+            }
         }
 
-        return $this->render('update', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('update', [
             'model' => $model,
         ]);
     }
@@ -103,6 +145,7 @@ class AuthassignmentController extends Controller
                 try {
                     bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'yetki silme','atama:'.$user_id."<=".$item_name );
                     $this->findModel($item_name, $user_id)->delete();
+                    $this->removeAsbunetAssignment($item_name, $user_id);
                     $transaction->commit();
                     Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
                     return $this->redirect(['index']);
@@ -119,6 +162,101 @@ class AuthassignmentController extends Controller
                     return $this->redirect(['index']);
                 }
             
+    }
+
+    private function syncAsbunetAssignment($itemName, $userId)
+    {
+        if (!$this->isBgysRole($itemName)) {
+            return;
+        }
+
+        $asbunetUserId = $this->resolveAsbunetUserId($userId);
+        if ($asbunetUserId === null) {
+            return;
+        }
+
+        $this->ensureAsbunetRole($itemName);
+
+        $exists = (new \yii\db\Query())
+            ->from('auth_assignment')
+            ->where([
+                'item_name' => $itemName,
+                'user_id' => (string)$asbunetUserId,
+            ])
+            ->one(Yii::$app->dbasbunet);
+
+        if ($exists !== false && $exists !== null) {
+            return;
+        }
+
+        Yii::$app->dbasbunet->createCommand()->insert('auth_assignment', [
+            'item_name' => $itemName,
+            'user_id' => (string)$asbunetUserId,
+            'created_at' => time(),
+        ])->execute();
+    }
+
+    private function removeAsbunetAssignment($itemName, $userId)
+    {
+        if (!$this->isBgysRole($itemName)) {
+            return;
+        }
+
+        $asbunetUserId = $this->resolveAsbunetUserId($userId);
+        if ($asbunetUserId === null) {
+            return;
+        }
+
+        Yii::$app->dbasbunet->createCommand()->delete('auth_assignment', [
+            'item_name' => $itemName,
+            'user_id' => (string)$asbunetUserId,
+        ])->execute();
+    }
+
+    private function ensureAsbunetRole($itemName)
+    {
+        $exists = (new \yii\db\Query())
+            ->from('auth_item')
+            ->where(['name' => $itemName])
+            ->one(Yii::$app->dbasbunet);
+
+        if ($exists !== false && $exists !== null) {
+            return;
+        }
+
+        Yii::$app->dbasbunet->createCommand()->insert('auth_item', [
+            'name' => $itemName,
+            'type' => 1,
+            'description' => self::BGYS_ROLE_DESCRIPTIONS[$itemName] ?? $itemName,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ])->execute();
+    }
+
+    private function resolveAsbunetUserId($bgysUserId)
+    {
+        $username = (new \yii\db\Query())
+            ->from('user')
+            ->select('username')
+            ->where(['id' => (string)$bgysUserId])
+            ->scalar(Yii::$app->db);
+
+        if (!$username) {
+            return null;
+        }
+
+        $asbunetUserId = (new \yii\db\Query())
+            ->from('user')
+            ->select('id')
+            ->where(['username' => $username])
+            ->scalar(Yii::$app->dbasbunet);
+
+        return $asbunetUserId === false ? null : $asbunetUserId;
+    }
+
+    private function isBgysRole($itemName)
+    {
+        return array_key_exists((string)$itemName, self::BGYS_ROLE_DESCRIPTIONS);
     }
 
     protected function findModel($item_name, $user_id)

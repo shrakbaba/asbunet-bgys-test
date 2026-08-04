@@ -5,6 +5,7 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'basic-console',
+    'timeZone' => 'Europe/Istanbul',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'app\commands',
@@ -25,6 +26,10 @@ $config = [
             ],
         ],
         'db' => $db,
+        'formatter' => [
+            'defaultTimeZone' => 'Europe/Istanbul',
+            'timeZone' => 'Europe/Istanbul',
+        ],
         'authManager'=>[
             'class'=>'yii\rbac\DbManager',
             'defaultRoles'=>['guest'],

@@ -7,6 +7,7 @@ use app\models\Bgyskritiksurecler;
 use app\models\BgyskritiksureclerSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 
 /**
@@ -17,12 +18,18 @@ class BgyskritiksureclerController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [                    
                     [
                         'allow' => true,
-                        'actions' => ['index','view','create','update'],
+                        'actions' => ['index','view','create','update','delete'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                    /* [

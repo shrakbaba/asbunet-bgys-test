@@ -12,15 +12,26 @@ use app\models\Bgysriskkabul;
  */
 class BgysriskkabulSearch extends Bgysriskkabul
 {
+    public $risk_adi;
+    public $kabuleden_adi;
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'riskid', 'kabuleden'], 'integer'],
-            [['aciklama', 'tarih'], 'safe'],
+            [['id'], 'integer'],
+            [['riskid', 'risk_adi', 'kabuleden_adi', 'aciklama', 'tarih'], 'safe'],
         ];
+    }
+
+    public function attributes()
+    {
+        return array_merge(parent::attributes(), [
+            'risk_adi',
+            'kabuleden_adi',
+        ]);
     }
 
     /**
@@ -64,12 +75,32 @@ class BgysriskkabulSearch extends Bgysriskkabul
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'riskid' => $this->riskid,
-            'kabuleden' => $this->kabuleden,
             'tarih' => $this->tarih,
         ]);
 
-        $query->andFilterWhere(['like', 'aciklama', $this->aciklama]);
+        $query->andFilterWhere(['like', 'riskid', $this->riskid])
+            ->andFilterWhere(['like', 'aciklama', $this->aciklama]);
+
+        $query->joinWith('risk');
+        $query->andFilterWhere(['like', 'bgys_risk.risk', $this->risk_adi]);
+
+        $query->joinWith('kabuleden0');
+        $kabulEdenArama = trim((string)$this->kabuleden_adi);
+        if ($kabulEdenArama !== '') {
+            if (Yii::$app->params['giristipi'] == 1) {
+                $query->andWhere(['or',
+                    ['like', 'user.username', $kabulEdenArama],
+                    ['like', 'user.id', $kabulEdenArama],
+                ]);
+            } else {
+                $query->andWhere(['or',
+                    ['like', 'user.ad', $kabulEdenArama],
+                    ['like', 'user.soyad', $kabulEdenArama],
+                    ['like', 'user.username', $kabulEdenArama],
+                    ['like', 'bgys_risk_kabul.kabuleden', $kabulEdenArama],
+                ]);
+            }
+        }
 
         return $dataProvider;
     }

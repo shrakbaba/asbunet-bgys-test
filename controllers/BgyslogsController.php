@@ -24,8 +24,8 @@ class BgyslogsController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index','login','contact','view'],
-                        'roles' => ['BGYS_Ekip_Lideri'],
+                        'actions' => ['index','view'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                    /* [
                       'allow' => false,
@@ -63,9 +63,13 @@ class BgyslogsController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
+        $params = [
             'model' => $this->findModel($id),
-        ]);
+        ];
+
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('view', $params)
+            : $this->render('view', $params);
     }
 
     /**

@@ -6,6 +6,7 @@ use yii\helpers\Html;
 /* @var $model app\models\Bgysfarkindalikquiz */
 
 //$this->params['breadcrumbs'][] = ['label' => 'Bgysfarkindalikquizzes', 'url' => ['index']];
+$this->title = ($model->egitim ? $model->egitim->baslik : 'Farkındalık Eğitimi') . ' Quiz';
 ?>
 <div class="bgysfarkindalikquiz-create">
 

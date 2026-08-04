@@ -8,6 +8,7 @@ use Yii;
  * This is the model class for table "bgys_farkindalik_quiz".
  *
  * @property int $id
+ * @property int $egitim_id
  * @property string $cevaplayan
  * @property string $ip
  * @property string $cevaplamatarihi
@@ -21,6 +22,30 @@ class Bgysfarkindalikquiz extends \yii\db\ActiveRecord
     public static function tableName()
     {
         return 'bgys_farkindalik_quiz';
+    }
+
+    public function getCevaplayanAdSoyad()
+    {
+        if (!$this->cevaplayan) {
+            return null;
+        }
+
+        try {
+            $kullanici = (new \yii\db\Query())
+                ->select(['ub.ad', 'ub.soyad'])
+                ->from('user u')
+                ->innerJoin('user_bilgi ub', 'ub.kisi_id = u.id')
+                ->where('u.username COLLATE utf8mb3_turkish_ci = :cevaplayan', [':cevaplayan' => $this->cevaplayan])
+                ->one(Yii::$app->db);
+
+            if ($kullanici && (!empty($kullanici['ad']) || !empty($kullanici['soyad']))) {
+                return trim(($kullanici['ad'] ?? '') . ' ' . ($kullanici['soyad'] ?? ''));
+            }
+        } catch (\Throwable $e) {
+            Yii::warning('Farkındalık quiz cevaplayan ad soyad bilgisi okunamadı: ' . $e->getMessage(), 'security');
+        }
+
+        return $this->cevaplayan;
     }
     /*
     public $dogrular=[
@@ -119,9 +144,11 @@ public $soru4data = [0 => 'Morning', 1 => 'Noon', 2 => 'Evening'];
     {
         return [
             [['cevaplayan', 'ip', 'cevaplar'], 'required'],
+            [['egitim_id'], 'integer'],
             [['cevaplamatarihi'], 'safe'],
             [['cevaplayan', 'ip', 'puan'], 'string', 'max' => 255],
             [['cevaplar'], 'string', 'max' => 750],
+            [['soru1', 'soru2', 'soru3', 'soru4', 'soru5', 'soru6', 'soru7', 'soru8', 'soru9', 'soru10', 'soru11', 'soru12', 'soru13'], 'safe'],
         ];
     }
 
@@ -132,6 +159,7 @@ public $soru4data = [0 => 'Morning', 1 => 'Noon', 2 => 'Evening'];
     {
         return [
             'id' => 'ID',
+            'egitim_id' => 'Eğitim',
             'cevaplayan' => 'Ad Soyad',
             'ip' => 'IP',
             'cevaplamatarihi' => 'Cevaplama Tarihi',
@@ -149,5 +177,38 @@ public $soru4data = [0 => 'Morning', 1 => 'Noon', 2 => 'Evening'];
             'soru11'=>'11.   Şifre kullanımı ile ilgili bilgilerden hangisi yanlıştır?',
             'puan'=> 'Sınav Sonucu',
         ];
+    }
+
+    public function getEgitim()
+    {
+        return $this->hasOne(Bgysfarkindalikegitim::className(), ['id' => 'egitim_id']);
+    }
+
+    public function getQuizSorulari()
+    {
+        if ($this->egitim && $this->egitim->quiz_json) {
+            $quiz = json_decode($this->egitim->quiz_json, true);
+            if (is_array($quiz)) {
+                return $quiz;
+            }
+        }
+
+        return $this->egitim ? [] : $this->varsayilanQuizSorulari();
+    }
+
+    public function varsayilanQuizSorulari()
+    {
+        $sorular = [];
+        for ($i = 1; $i <= 11; $i++) {
+            $alan = 'soru' . $i;
+            $secenekAlan = $alan . 'data';
+            $sorular[] = [
+                'soru' => $this->attributeLabels()[$alan],
+                'secenekler' => array_values($this->$secenekAlan),
+                'dogru' => $this->dogrular[$alan],
+            ];
+        }
+
+        return $sorular;
     }
 }

@@ -15,7 +15,7 @@ use yii\widgets\ActiveForm;
         'method' => 'get',
     ]); ?>
 
-    <?= /* $form->field($model, 'id') */ ?>
+    <?php // ID alanı arama formunda kullanılmıyor. ?>
 
     <?= $form->field($model, 'cihaz_turu') ?>
 

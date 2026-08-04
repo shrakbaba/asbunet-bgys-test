@@ -22,16 +22,15 @@ class Bgysfirmabilgi extends \yii\db\ActiveRecord
         return 'bgys_firma_bilgi';
     }
     public $file;
-    /**
-     * {@inheritdoc}
-     */
+    
+
     public function rules()
     {
         return [
-            [['firmaadi', 'yetkilikisi', 'telefon'], 'required'],
+            [['firmaadi', 'yetkilikisi', 'telefon','faaliyet_alani'], 'required'],
             [['tedarik_tipi'], 'integer'],
-            [['firmaadi', 'yetkilikisi', 'telefon','faaliyet_alani','mail','belge'], 'string', 'max' => 255],
-            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','maxSize' => 1024 * 1024 * 1],  //max 1Mb
+            [['firmaadi', 'yetkilikisi', 'telefon','mail','belge'], 'string', 'max' => 255],
+            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 1],  //max 1Mb
         ];
     }
 

@@ -9,6 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\Userbilgi;
 
 
 use yii\helpers\imdat;
@@ -26,6 +27,9 @@ use app\models\Bgysdiftakip;
 use app\models\Envcihazliste;
 use app\models\Bgysfirmabilgi;
 use app\models\Bgysfirmadegerlendirme;
+use app\models\Yenihostbildir;
+use app\models\Bgysfarkindalikegitim;
+use app\models\Bgysfarkindalikquiz;
 
 
 class SiteController extends Controller
@@ -38,7 +42,7 @@ class SiteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index','login','contact','about','uzaklogin','snmp'],
+                        'actions' => ['index','login','contact','about','vcenter'],
                         'roles' => [],
                     ],
                     [
@@ -69,6 +73,14 @@ class SiteController extends Controller
         ];
     }
 
+    public function beforeAction($action) {
+        if ($action->id == 'vcenter') {
+            $this->enableCsrfValidation = false;
+        }
+
+        return parent::beforeAction($action);
+    }
+
     public function actions()
     {
         return [
@@ -82,41 +94,39 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionSnmp()
+    public function actionVcenter()
     {
-        //$sysdescr = @snmpget("10.0.199.1", "asbu*2013", '.1.3.6.1.2.1.43.11.1.1.9.1.1');
-        //$sysdescr = snmpget("10.0.199.1", "asbu*2013",300);
-       // print_r($sysdescr);
-        $snmp = new snmp('read');
-        $getActive = $snmp->getAllPortsStatus(); 
-        print_r($getActive);   
-    }
-
-    public function actionUzaklogin()
-    {
-
         if(Yii::$app->request->post()){
-            return 1;
-        }
+            $ip=Yii::$app->getRequest()->getUserIP();
+            $a=Yii::$app->request->post();
+            $beklenenAnahtar = Yii::$app->params['vcenterWebhookKey'] ?? '';
+            $gelenAnahtar = Yii::$app->request->headers->get('X-BGYS-Webhook-Key', Yii::$app->request->post('key', ''));
+            $beklenenIp = Yii::$app->params['vcenterWebhookIp'] ?? '10.0.31.20';
+            //echo"<pre>";var_dump($a);
+            if ($beklenenAnahtar === '' || $gelenAnahtar === '' || !hash_equals($beklenenAnahtar, $gelenAnahtar) || $ip !== $beklenenIp) {
+                Yii::warning('Yetkisiz vCenter webhook isteği: ' . $ip, 'security');
+                throw new \yii\web\ForbiddenHttpException('Yetkisiz webhook isteği.');
+            }
 
-        /*
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) ) {
+            if (isset($a['vm'])) {
+                $model = new Yenihostbildir();
+                //$model->json=$ip;
+                $model->json=json_encode($a);
+                $model->zabbix=0;
+                $model->kaspersky=0;
+                $model->ipmanage=0;
+                $model->paloalto=0;
+                $model->vm_name=$a['vm'];
 
-            if ($model->login()) {
-                //echo ";adsda";exit;
-                //bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
-                //return $this->goBack();
-                if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
-                    return 1;                
-                }else{
-                    return 0;
+                if ($model->save()) {
+                    bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,1,'Vcenter trigger',$a['vm'].' vm created');
+
+                    $maillistesi=bgys::mailGrubu('yeniVm');
+                    bgys::yenivm($maillistesi, $a['vm']);
+
                 }
-            }  
+            }
         }
-        return $this->render('login', [
-            'model' => $model,
-        ]);*/
     }
 
     public function actionIndex()
@@ -131,6 +141,7 @@ class SiteController extends Controller
             if ($model->login()) {
                 //echo ";adsda";exit;
                 //echo "asdsadwqeqead234as";exit;
+                Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi') ) {
                     //echo "yetkivar";exit;
@@ -156,6 +167,7 @@ class SiteController extends Controller
         if ($model->load(Yii::$app->request->post()) ) {
             if ($model->login()) {
                 //echo ";adsda";exit;
+                Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
                 //return $this->goBack();
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
@@ -180,7 +192,8 @@ class SiteController extends Controller
     public function actionContact()
     { 
         $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
+        $contactAlicilari = bgys::mailGrubu('contact') ?: [Yii::$app->params['adminEmail']];
+        if ($model->load(Yii::$app->request->post()) && $model->contact($contactAlicilari)) {
             Yii::$app->session->setFlash('contactFormSubmitted');
 
             return $this->refresh();
@@ -295,18 +308,18 @@ class SiteController extends Controller
         $tedarikci= Bgysfirmabilgi::findBySql($sql)->count();
         $tedarikcipersonel= Bgysfirmabilgi::find()->count();
 
+        $tedarikTipiIfadesi = new \yii\db\Expression('CASE l.tedarik_tipi 
+                WHEN 1 THEN "Hizmet" WHEN 2 THEN "Malzeme" WHEN 3 THEN "Servis" WHEN 4 THEN "Yüksek Teknoloji" ELSE "Diğer" END');
         $tedarikcitipi = (new \yii\db\Query())
-            ->select(['count(l.id) as value',new \yii\db\Expression('CASE l.tedarik_tipi 
-                WHEN 1 THEN "Hizmet" WHEN 2 THEN "Malzeme" WHEN 3 THEN "Servis" WHEN 4 THEN "Yüksek Teknoloji" ELSE "" END as tip')])
+            ->select(['count(l.id) as value', 'tip' => $tedarikTipiIfadesi])
             ->from('bgys_firma_bilgi l')
-            ->groupBy(['l.tedarik_tipi'])
-            ->limit(3)
+            ->groupBy([$tedarikTipiIfadesi])
             ->all();   
             //echo "<pre>";var_dump($tedarikcitipi) ;exit; 
             //1 =>"Hizmet" ,2=>"Malzeme",3=>'Servis',4=>'Yüksek Teknoloji'
 
 
-        $riskdetay = Bgysrisk::find()->all() ; //basvuru sonucu verilmisse
+        $riskdetay = Bgysrisk::find()->where(['aktif' => 1])->all() ; //basvuru sonucu verilmisse
             $dusukrisk=[];
             $ortarisk=[];
             $yuksekrisk=[];
@@ -341,6 +354,7 @@ class SiteController extends Controller
             ->select(['count(l.id) as value',new \yii\db\Expression('CASE l.ozetdurum 
                 WHEN 1 THEN "Risk Azalmış" WHEN 2 THEN "Risk Artmış" WHEN 4 THEN "Risk Kabul" ELSE "Değişim Yok" END as ozetdurum')])
             ->from('bgys_risk l')
+            ->where(['l.aktif' => 1])
             ->groupBy(['l.ozetdurum'])
             ->all();
         if ($riskdegisim) {
@@ -353,7 +367,7 @@ class SiteController extends Controller
             $riskdegisim=null; 
 
 
-        $riskhatirasi=Bgysrisk::find()->all();
+        $riskhatirasi=Bgysrisk::find()->where(['aktif' => 1])->all();
 
         if ($riskhatirasi) {
             $arr=[[]];
@@ -399,9 +413,60 @@ class SiteController extends Controller
             }
         }
 
+        $hatirlatmalar = Bgysolaykayit::find()
+            ->where(['and',
+                ['>', 'mudahaletarihi', '1000-01-01'],
+                ['>=', 'mudahaletarihi', date('Y-m-d')],
+                ['<=', 'mudahaletarihi', date('Y-m-d', strtotime('+15 days'))],
+                ['or',
+                    ['yapilanmudahale' => null],
+                    ['yapilanmudahale' => ''],
+                    ['sonuc' => null],
+                    ['sonuc' => ''],
+                ],
+            ])
+            ->orderBy(['mudahaletarihi' => SORT_ASC])
+            ->limit(5)
+            ->all();
 
+        $egitimSayisi = Bgysfarkindalikegitim::find()->where(['aktif' => 1])->count();
+        $egitimGirisSayisi = (new \yii\db\Query())->from('bgys_farkindalik_egitim_giris')->count();
+        $egitimQuizSayisi = Bgysfarkindalikquiz::find()->count();
+        $egitimOrtalamaPuan = Bgysfarkindalikquiz::find()->average('puan');
+        $egitimIstatistikleri = (new \yii\db\Query())
+            ->select([
+                'e.id',
+                'e.baslik',
+                'cozulen' => 'COUNT(DISTINCT q.id)',
+                'giris' => 'COUNT(DISTINCT g.id)',
+                'ortalama' => 'AVG(q.puan)',
+            ])
+            ->from('bgys_farkindalik_egitim e')
+            ->leftJoin('bgys_farkindalik_quiz q', 'q.egitim_id = e.id')
+            ->leftJoin('bgys_farkindalik_egitim_giris g', 'g.egitim_id = e.id')
+            ->where(['e.aktif' => 1])
+            ->groupBy(['e.id', 'e.baslik'])
+            ->orderBy(['e.created_at' => SORT_DESC])
+            ->all();
+        $egitimBirimIstatistikleri = (new \yii\db\Query())
+            ->select([
+                'birim' => 'COALESCE(NULLIF(ub.birim, ""), "(Veri Yok)")',
+                'cozulen' => 'COUNT(DISTINCT q.id)',
+                'ortalama' => 'AVG(q.puan)',
+            ])
+            ->from('bgys_farkindalik_quiz q')
+            ->leftJoin('user u', 'u.username COLLATE utf8mb3_turkish_ci = q.cevaplayan')
+            ->leftJoin('user_bilgi ub', 'ub.kisi_id = u.id')
+            ->groupBy(['birim'])
+            ->orderBy(['cozulen' => SORT_DESC])
+            ->all();
+        $sonEgitimSonuclari = Bgysfarkindalikquiz::find()
+            ->with('egitim')
+            ->orderBy(['cevaplamatarihi' => SORT_DESC])
+            ->limit(8)
+            ->all();
 
-        $data=['risk'=>@$risk,'riskkabul'=>@$riskkabul,'varlik'=>@$varlik,'varlikkritik'=>@$varlikkritik,'diftalep'=>@$diftalep,'diftalepkapali'=>@$diftalepkapali,'diftakip'=>@$diftakip,'diftakiponayli'=>@$diftakiponayli,'cihazliste'=>@$cihazliste,'tedarikci'=>@$tedarikci,'tedarikci'=>@$tedarikci,'tedarikcipersonel'=>@$tedarikcipersonel,'degerlendirme'=>@$degerlendirme,'degerlendirmeonayli'=>@$degerlendirmeonayli,'degerlendirilmeyenler'=>@$xx,'PieDataTur'=>$PieDataTur,'PieDataMarka'=>$PieDataMarka,'olaykayit'=>$olaykayit,'yeniolaykayit'=>$yeniolaykayit,'basvurusonuclari'=>$basvurusonuclari,'riskdegisim'=>$riskdegisim,'varlikkategori'=>$varlikkategori,'cihazturu'=>$cihazturu,'tedarikcitipi'=>$tedarikcitipi,'riskhatirasi'=>$b];
+        $data=['risk'=>@$risk,'riskkabul'=>@$riskkabul,'varlik'=>@$varlik,'varlikkritik'=>@$varlikkritik,'diftalep'=>@$diftalep,'diftalepkapali'=>@$diftalepkapali,'diftakip'=>@$diftakip,'diftakiponayli'=>@$diftakiponayli,'cihazliste'=>@$cihazliste,'tedarikci'=>@$tedarikci,'tedarikci'=>@$tedarikci,'tedarikcipersonel'=>@$tedarikcipersonel,'degerlendirme'=>@$degerlendirme,'degerlendirmeonayli'=>@$degerlendirmeonayli,'degerlendirilmeyenler'=>@$xx,'PieDataTur'=>$PieDataTur,'PieDataMarka'=>$PieDataMarka,'olaykayit'=>$olaykayit,'yeniolaykayit'=>$yeniolaykayit,'basvurusonuclari'=>$basvurusonuclari,'riskdegisim'=>$riskdegisim,'varlikkategori'=>$varlikkategori,'cihazturu'=>$cihazturu,'tedarikcitipi'=>$tedarikcitipi,'riskhatirasi'=>$b,'hatirlatmalar'=>$hatirlatmalar,'egitimSayisi'=>$egitimSayisi,'egitimGirisSayisi'=>$egitimGirisSayisi,'egitimQuizSayisi'=>$egitimQuizSayisi,'egitimOrtalamaPuan'=>$egitimOrtalamaPuan,'egitimIstatistikleri'=>$egitimIstatistikleri,'egitimBirimIstatistikleri'=>$egitimBirimIstatistikleri,'sonEgitimSonuclari'=>$sonEgitimSonuclari];
 
         return $this->render('dashboard',['data'=>$data]);
     }

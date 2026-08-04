@@ -23,13 +23,24 @@ class UserbilgiController extends Controller
      public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['create','index','view','delete'],
-                        'roles' => ['BGYS_Yonetim_Temsilcisi'],
+                        'actions' => ['index','view'],
+                        'roles' => ['BGYS_Super_Admin'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['create','delete'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                         'allow' => true,
@@ -55,6 +66,10 @@ class UserbilgiController extends Controller
      */
     public function actionIndex()
     {
+        if (!Yii::$app->user->isGuest) {
+            Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
+        }
+
         $searchModel = new UserbilgiSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
@@ -72,36 +87,96 @@ class UserbilgiController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
+        $this->senkronla($id);
+        $model = $this->findModel($id);
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('view', [
+            'model' => $model,
         ]);
     }
 
     public function actionUpdate($id)
     {
-        //$model = $this->findone(['id' => $id]);
-        //$user=Yii::$app->user->identity->id;
-        /*var_dump($user);*/
-        //var_dump($id);exit;
+        $superAdmin = Yii::$app->user->can('BGYS_Super_Admin');
+        $model = null;
 
-        if ( is_numeric(($id)) and @imdat::userbilgibenimmi($id) and $id==Yii::$app->user->identity->id) {
-        
-          $model = @Userbilgi::find()->where(['kisi_id' => $id])->one();
+        if (is_numeric($id) && !Yii::$app->user->isGuest && (int)$id === (int)Yii::$app->user->identity->id) {
+            $model = Userbilgi::find()->where(['kisi_id' => (int)$id])->one();
+        }
+        if ($model === null) {
+            $model = $this->findModelByIdOrKisiId($id);
+        }
 
-          if ($model->load(Yii::$app->request->post())) {            
-              if ($model->save()) {  
-                  return $this->redirect(['view', 'id' => $model->id]);
-              }
-          }
-          return $this->render('update', [
-              'model' => $model,
-          ]);
+        if ($model === null && is_numeric($id) && (int)$id === (int)Yii::$app->user->identity->id) {
+            Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
+            $model = Userbilgi::find()->where(['kisi_id' => (int)$id])->one();
+        }
 
-        }else{
+        if ($model === null) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
 
+        if (!$superAdmin && (int)$model->kisi_id !== (int)Yii::$app->user->identity->id) {
             Yii::$app->session->setFlash('error','Yetkisiz işlem.');
             return $this->render('/site/index');
         }
+
+        $this->senkronla($model->id);
+        $model = $this->findModel($model->id);
+
+        if ($model->load(Yii::$app->request->post())) {
+            $mevcutModel = $this->findModel($model->id);
+            $model->kisi_id = $mevcutModel->kisi_id;
+            $model->ad = $mevcutModel->ad;
+            $model->soyad = $mevcutModel->soyad;
+            $model->email = $mevcutModel->email;
+
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success','Bilgiler güncellendi.');
+                return Yii::$app->request->isAjax
+                    ? '<script>window.location.reload();</script>'
+                    : ($superAdmin ? $this->redirect(['index']) : $this->redirect(['/site/index']));
+            }
+        }
+
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$render('update', [
+            'model' => $model,
+        ]);
+    }
+
+    private function senkronla($id)
+    {
+        $model = $this->findModelByIdOrKisiId($id);
+        if ($model === null) {
+            return;
+        }
+
+        if (!Yii::$app->user->isGuest && (int)$model->kisi_id === (int)Yii::$app->user->identity->id) {
+            Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
+            return;
+        }
+
+        try {
+            $identityClass = \Edvlerblog\Adldap2\model\UserDbLdap::className();
+            $identity = $identityClass::findOne($model->kisi_id);
+            if ($identity !== null) {
+                Userbilgi::adBilgileriniSenkronla($identity);
+            }
+        } catch (\Throwable $e) {
+            Yii::warning('Kullanıcı bilgisi görüntüleme öncesi senkronlanamadı: ' . $e->getMessage(), 'security');
+        }
+    }
+
+    private function findModelByIdOrKisiId($id)
+    {
+        $model = Userbilgi::findOne($id);
+        if ($model !== null) {
+            return $model;
+        }
+
+        return Userbilgi::find()->where(['kisi_id' => $id])->one();
     }
 
     public function actionDelete($id)

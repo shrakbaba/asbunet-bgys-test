@@ -23,18 +23,24 @@ class AuthitemController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
                         'actions' => ['index','view'],
-                        'roles' => ['super_admin'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                         'allow' => true,
                         'actions' => ['create','update','delete'],
-                        'roles' => ['super_admin'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                       'allow' => false,
@@ -62,7 +68,9 @@ class AuthitemController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('view', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -73,7 +81,9 @@ class AuthitemController extends Controller
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'rol atama','atama:'.$model->name );
-            return $this->redirect(['view', 'id' => $model->name]);
+            return Yii::$app->request->isAjax
+                ? '<script>window.location.reload();</script>'
+                : $this->redirect(['index']);
         }
 
         return $this->renderAjax('create', [
@@ -87,10 +97,14 @@ class AuthitemController extends Controller
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'rol guncelleme','atama:'.$model->name );
-            return $this->redirect(['view', 'id' => $model->name]);
+            return Yii::$app->request->isAjax
+                ? '<script>window.location.reload();</script>'
+                : $this->redirect(['index']);
         }
 
-        return $this->render('update', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('update', [
             'model' => $model,
         ]);
     }

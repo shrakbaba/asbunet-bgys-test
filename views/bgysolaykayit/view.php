@@ -15,14 +15,14 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Güncelle', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?php /* Html::a('Güncelle', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Sil', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
                 'confirm' => 'Bu veriyi silmek istediğinizden emin misiniz?',
                 'method' => 'post',
             ],
-        ]) ?>
+        ]) */ ?>
     </p>
 
     <?= DetailView::widget([
@@ -50,7 +50,29 @@ $this->params['breadcrumbs'][] = $this->title;
             'onlem'
         ],
     ]) ?>
-<?php if ($model->belge) {      ?>
-                        <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("olay")."/".$model->belge ?>')" style="margin: 10px;color:white">Belge</span>
-                <?php } ?>
+<?php if ($model->belge || $model->belgeler) { ?>
+    <div style="margin-top:15px">
+        <label>Eklenen Belgeler</label>
+        <ul style="padding-left:18px">
+            <?php if ($model->belge) { ?>
+                <li>
+                    <?= Html::a($model->belge, ['pdfgoster', 'id' => $model->id], [
+                        'target' => '_blank',
+                        'style' => 'color:#337ab7;text-decoration:underline;',
+                        'onclick' => "window.open(this.href, '_blank'); return false;",
+                    ]) ?>
+                </li>
+            <?php } ?>
+            <?php foreach ($model->belgeler as $belge) { ?>
+                <li>
+                    <?= Html::a(Html::encode($belge->orijinal_ad), ['belgegoster', 'id' => $belge->id], [
+                        'target' => '_blank',
+                        'style' => 'color:#337ab7;text-decoration:underline;',
+                        'onclick' => "window.open(this.href, '_blank'); return false;",
+                    ]) ?>
+                </li>
+            <?php } ?>
+        </ul>
+    </div>
+<?php } ?>
 </div>

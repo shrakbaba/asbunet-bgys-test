@@ -46,8 +46,8 @@ class Bgyscihazbakim extends \yii\db\ActiveRecord
             : [['sorumlu'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['sorumlu' => 'id']],
 
             [['cihazid'], 'exist', 'skipOnError' => true, 'targetClass' => Envcihazliste::className(), 'targetAttribute' => ['cihazid' => 'id']],
-            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','maxSize' => 1024 * 1024 * 1],  //max 1Mb
-            [['bakimlar'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','maxSize' => 1024 * 1024 * 10,'maxFiles'=>10],
+            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 1],  //max 1Mb
+            [['bakimlar'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 10,'maxFiles'=>10],
         ];
     }
 

@@ -32,13 +32,7 @@ class BgysfirmabilgiSearch extends Bgysfirmabilgi
         return Model::scenarios();
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     *
-     * @return ActiveDataProvider
-     */
+  
     public function search($params)
     {
         $query = Bgysfirmabilgi::find();
@@ -67,9 +61,17 @@ class BgysfirmabilgiSearch extends Bgysfirmabilgi
 
         $query->andFilterWhere(['like', 'firmaadi', $this->firmaadi])
             ->andFilterWhere(['like', 'yetkilikisi', $this->yetkilikisi])
-            ->andFilterWhere(['like', 'telefon', $this->telefon])
-            ->andFilterWhere(['like', 'tedarik_tipi', $this->tedarik_tipi]);
+            ->andFilterWhere(['like', 'telefon', $this->telefon]);
 
+        if ($this->tedarik_tipi !== null && $this->tedarik_tipi !== '') {
+            $query->andWhere(['tedarik_tipi' => $this->tedarik_tipi]);
+        }
+
+        $query->andFilterWhere(
+            ['or',['like', 'faaliyet_alani', $this->faaliyet_alani],
+            ['like', 'faaliyet_alani', $this->faaliyet_alani]
+        ]);
+        
         return $dataProvider;
     }
 }

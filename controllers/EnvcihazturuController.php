@@ -10,6 +10,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\helpers\bgys;
+use yii\db\IntegrityException;
 
 /**
  * EnvcihazturuController implements the CRUD actions for Envcihazturu model.
@@ -22,6 +23,12 @@ class EnvcihazturuController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -101,11 +108,18 @@ class EnvcihazturuController extends Controller
        /* $this->findModel($id)->delete();
 
         return $this->redirect(['index']);*/
+        $model = $this->findModel($id);
+        $kullanimSayisi = $model->getEnvCihazListes()->count();
+        if ($kullanimSayisi > 0) {
+            Yii::$app->session->setFlash('error', 'Bu cihaz türü ' . $kullanimSayisi . ' cihazda kullanıldığı için silinemez.');
+            return $this->redirect(['index']);
+        }
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         try {
-            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz turu silindi','tur:'.$this->findModel($id)->cihaz_turu );
-            $this->findModel($id)->delete();
+            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz turu silindi','tur:'.$model->cihaz_turu );
+            $model->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);

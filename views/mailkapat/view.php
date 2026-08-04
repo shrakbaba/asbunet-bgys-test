@@ -6,24 +6,13 @@ use yii\widgets\DetailView;
 /* @var $this yii\web\View */
 /* @var $model app\models\Mailkapat */
 
-$this->title = $model->id;
+$this->title = 'Mail Hatırlatma: '.$model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Kapatılacak Mailler', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="mailkapat-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-     <p>
-        <?= Html::a('Güncelle', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Sil', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Bu veriyi silmek istediğinizden emin misiniz?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
+    <h2><?= Html::encode($this->title) ?></h2>
 
     <?= DetailView::widget([
         'model' => $model,
@@ -45,5 +34,9 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ],
     ]) ?>
+
+    <p>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Tamam</button>
+    </p>
 
 </div>

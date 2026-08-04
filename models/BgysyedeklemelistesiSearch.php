@@ -17,8 +17,8 @@ class BgysyedeklemelistesiSearch extends Bgysyedeklemelistesi
     public function rules()
     {
         return [
-            [['id', 'sorumlu', 'yedeklemesekli', 'periyodu'], 'integer'],
-            [['yedekalinacak', 'yedekleme_yontemi', 'yedeklemeyeri', 'yedeklemezamani', 'olusturma_tarihi'], 'safe'],
+            [['id', 'sorumlu', 'yedeklemesekli', 'periyodu', 'yedeklemezamani'], 'integer'],
+            [['yedekalinacak', 'yedekleme_yontemi', 'yedeklemeyeri', 'olusturma_tarihi'], 'safe'],
         ];
     }
 
@@ -66,13 +66,13 @@ class BgysyedeklemelistesiSearch extends Bgysyedeklemelistesi
             'sorumlu' => $this->sorumlu,
             'yedeklemesekli' => $this->yedeklemesekli,
             'periyodu' => $this->periyodu,
+            'yedeklemezamani' => $this->yedeklemezamani,
             'olusturma_tarihi' => $this->olusturma_tarihi,
         ]);
 
         $query->andFilterWhere(['like', 'yedekalinacak', $this->yedekalinacak])
             ->andFilterWhere(['like', 'yedekleme_yontemi', $this->yedekleme_yontemi])
-            ->andFilterWhere(['like', 'yedeklemeyeri', $this->yedeklemeyeri])
-            ->andFilterWhere(['like', 'yedeklemezamani', $this->yedeklemezamani]);
+            ->andFilterWhere(['like', 'yedeklemeyeri', $this->yedeklemeyeri]);
 
         return $dataProvider;
     }

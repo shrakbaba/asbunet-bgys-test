@@ -17,7 +17,21 @@ use yii\helpers\bgys;
             'firmaadi',
             'yetkilikisi',
             'telefon',
-            'faaliyet_alani',                 
+            [
+                'attribute'=>'faaliyet_alani',
+                'format'=>'raw',
+                'value'=>function ($data)
+                    {
+                        $degerler = [];
+                        foreach ((array) json_decode($data->faaliyet_alani) as $value) {
+                            if (trim((string)$value) !== '') {
+                                $degerler[] = Html::encode($value);
+                            }
+                        }
+
+                        return implode('<br>', $degerler);
+                    }
+            ],
             [
                 'attribute'=>'tedarik_tipi',
                 'value'=>function ($data)
@@ -30,7 +44,7 @@ use yii\helpers\bgys;
         ],
     ]) ?>
     <?php if ($model->belge) {      ?>
-                        <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("firma")."/".$model->belge ?>')" style="margin: 10px;color:white">Belge</span>
+                        <?= Html::a(Html::encode($model->belge), ['belge', 'id' => $model->id], ['target' => '_blank', 'data-pjax' => '0', 'style' => 'margin: 10px;color:#337ab7;text-decoration:underline;display:inline-block;']) ?>
                 <?php } ?>
 
 </div>

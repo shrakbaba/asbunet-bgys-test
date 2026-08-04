@@ -58,7 +58,13 @@ class BgysdiftalepSearch extends Bgysdiftalep
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');
             return $dataProvider;
-        }
+        }        
+
+        $dataProvider->setSort(['defaultOrder' => [
+            'dif_no' => SORT_DESC,
+           // 'planlanan_tarih' => SORT_DESC,
+            ]
+        ]);
 
         /*$a=null;
         if (json_decode($model->risk_iliskisi)) {
@@ -73,10 +79,25 @@ class BgysdiftalepSearch extends Bgysdiftalep
         $query->andFilterWhere([
             'id' => $this->id,
             'talep_tarihi' => $this->talep_tarihi,
-            'durum' => $this->durum,
-            'planlanan_tarih' => $this->planlanan_tarih,
             //$a => $this->risk_iliskisi,
         ]);
+
+        if (!empty($this->planlanan_tarih)) {
+            $planlananTarihArama = str_replace('.', '/', trim((string)$this->planlanan_tarih));
+            $query->andWhere(
+                "DATE_FORMAT(planlanan_tarih, '%d/%m/%Y') LIKE :planlanan_tarih",
+                [':planlanan_tarih' => '%' . $planlananTarihArama . '%']
+            );
+        }
+
+        if ($this->durum !== null && $this->durum !== '') {
+            if ((int)$this->durum === 1) {
+                $query->andWhere(['durum' => 1]);
+            } else {
+                $query->andWhere(['or', ['durum' => 0], ['durum' => null]]);
+            }
+        }
+
         $query->andFilterWhere(['like', 'dif_no', $this->dif_no])
             ->andFilterWhere(['like', 'talep_eden', $this->talep_eden])
             ->andFilterWhere(['like', 'dif_konusu', $this->dif_konusu]);

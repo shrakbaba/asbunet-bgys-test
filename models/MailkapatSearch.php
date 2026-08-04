@@ -18,7 +18,7 @@ class MailkapatSearch extends Mailkapat
     public function rules()
     {
         return [
-            [['id'], 'integer'],
+            [['id', 'kapatildi'], 'integer'],
             [['mailhesabi', 'ayrilistarihi'], 'safe'],
         ];
     }
@@ -58,13 +58,20 @@ class MailkapatSearch extends Mailkapat
             return $dataProvider;
         }
 
+        $ayrilisTarihi = $this->ayrilistarihi;
+        if ($ayrilisTarihi && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $ayrilisTarihi)) {
+            $tarihParcalari = explode('/', $ayrilisTarihi);
+            $ayrilisTarihi = $tarihParcalari[2].'-'.$tarihParcalari[1].'-'.$tarihParcalari[0];
+        }
+
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'ayrilistarihi' => $this->ayrilistarihi,
+            'kapatildi' => $this->kapatildi,
         ]);
 
-        $query->andFilterWhere(['like', 'mailhesabi', $this->mailhesabi]);
+        $query->andFilterWhere(['like', 'mailhesabi', $this->mailhesabi])
+            ->andFilterWhere(['like', 'ayrilistarihi', $ayrilisTarihi]);
 
         return $dataProvider;
     }

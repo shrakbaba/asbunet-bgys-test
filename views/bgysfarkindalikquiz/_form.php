@@ -14,35 +14,23 @@ use kartik\checkbox\CheckboxX;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'cevaplayan')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'egitim_id')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'cevaplayan')->hiddenInput()->label(false) ?>
+    <div class="form-group">
+        <?= Html::label('Ad Soyad', null, ['class' => 'control-label']) ?>
+        <?= Html::textInput('cevaplayan_ad_soyad', $model->cevaplayanAdSoyad, [
+            'class' => 'form-control',
+            'readonly' => true,
+        ]) ?>
+    </div>
     <hr>
-    
-	<?= $form->field($model, 'soru1')->radioList($model->soru1data); ?>
 
-	<?= $form->field($model, 'soru2')->radioList($model->soru2data); ?>
-
-	<?= $form->field($model, 'soru3')->radioList($model->soru3data); ?>
-
-	<?= $form->field($model, 'soru4')->radioList($model->soru4data); ?>
-
-	<?= $form->field($model, 'soru5')->radioList($model->soru5data); ?>
-
-	<?= $form->field($model, 'soru6')->radioList($model->soru6data); ?>
-
-	<?= $form->field($model, 'soru7')->radioList($model->soru7data); ?>
-
-	<?= $form->field($model, 'soru8')->radioList($model->soru8data); ?>
-
-	<?= $form->field($model, 'soru9')->radioList($model->soru9data); ?>
-
-	<?= $form->field($model, 'soru10')->radioList($model->soru10data); ?>
-
-	<?= $form->field($model, 'soru11')->radioList($model->soru11data); ?>
-
-
+    <?php foreach ($model->quizSorulari as $index => $soru) { ?>
+        <?= $form->field($model, 'soru' . ($index + 1))->radioList($soru['secenekler'])->label($soru['soru']); ?>
+    <?php } ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success btn-lg']) ?>
+        <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

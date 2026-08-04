@@ -44,10 +44,11 @@ use app\models\Userbilgi;
     ?>
 </div> 
 <div class="col-lg-12">
-    <?= $form->field($model, 'risk')->textInput(['maxlength' => true]) ?></div> 
+    <?= $form->field($model, 'risk')->textArea(['rows'=>3,'maxlength' => true]) ?></div> 
 <div class="col-lg-12">
-    <?= $form->field($model, 'risk_nedeni')->textInput(['maxlength' => true]) ?></div> 
+    <?= $form->field($model, 'risk_nedeni')->textArea(['rows'=>3,'maxlength' => true]) ?></div> 
 
+<div class="col-lg-12">
      <?= $form->field($model, 'risk_sorumlusu')->widget(Select2::classname(), [
         'data' => Yii::$app->params['giristipi']==1 ? 
         ArrayHelper::map(\Edvlerblog\Adldap2\model\UserDbLdap::find()->all(),'id',function($model) {
@@ -63,8 +64,9 @@ use app\models\Userbilgi;
         ],
         ]); 
     ?>                       
+</div>
 
-<br>
+<div class="clearfix"></div>
 <h4>Müdahale Öncesi Değerler</h4>
 <hr>
 <div class="col-lg-3">
@@ -153,11 +155,12 @@ use app\models\Userbilgi;
         ]); 
     ?>
                         </div> 
+<div class="clearfix"></div>
+<div class="col-lg-12">
+    <?= $form->field($model, 'yuksek_riskin_sebebi')->textArea(['rows'=>3,'maxlength' => true]) ?>
+</div>
 
-
-
-    <?= $form->field($model, 'yuksek_riskin_sebebi')->textInput(['maxlength' => true]) ?>
-
+<div class="clearfix"></div>
     <div class="form-group">
         <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success btn-lg']) ?>
     </div>

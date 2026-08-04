@@ -3,6 +3,10 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
+use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
+use yii\db\Expression;   
 
 /**
  * This is the model class for table "bgys_risk".
@@ -68,8 +72,34 @@ class Bgysrisk extends \yii\db\ActiveRecord
             [['varlik'], 'exist', 'skipOnError' => true, 'targetClass' => Bgysvarlikenvanteri::className(), 'targetAttribute' => ['varlik' => 'id']],
             [['olasilik_onceki'], 'exist', 'skipOnError' => true, 'targetClass' => Bgysolasilik::className(), 'targetAttribute' => ['olasilik_onceki' => 'id']],
             [['olasilik_sonraki'], 'exist', 'skipOnError' => true, 'targetClass' => Bgysolasilik::className(), 'targetAttribute' => ['olasilik_sonraki' => 'id']],
+             [['updated_at'], 'safe'],
+            [['pasif_aciklama'], 'safe'],
+            [['updated_by'], 'integer'],
+            [['pasif_aciklama'], 'string'],
+            
         ];
     }
+
+    
+    public function behaviors()
+    {
+        return [
+            // Sadece updated_at için TimestampBehavior
+            [
+                'class' => TimestampBehavior::class,
+                'createdAtAttribute' => null,          
+                'updatedAtAttribute' => 'updated_at', 
+                'value' => new Expression('NOW()'),    
+            // Güncelleyen kullanıcıyı otomatik yazmak için
+            ],
+            [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => null,
+                'updatedByAttribute' => 'updated_by',
+            ],
+        ];
+    }
+
 
     /**
      * {@inheritdoc}
@@ -94,12 +124,15 @@ class Bgysrisk extends \yii\db\ActiveRecord
             'erisilebilirlik_sonraki' => 'Sonraki Erişilebilirlik Şiddeti',
             'riskdegeri_sonraki' => 'Sonraki Risk Değeri',
             'yuksek_riskin_sebebi' => 'Yüksek Riskin Sebebi',
-            'ozetdurum'=>'Riskin Durumu'
+            'ozetdurum'=>'Riskin Durumu',
+            'updated_at' => 'Güncellenme Tarihi',
+            'updated_by' => 'Güncelleyen Kullanıcı',
+             'pasif_aciklama'  => 'Pasife Alma Açıklaması', 
         ];
     }
 
     
-    public function iliskiler(){
+    public static function iliskiler(){
 
         $iliskilendirilmisler= Bgysdiftalep::find()->where(['!=','risk_iliskisi',""])->all();
 
@@ -109,6 +142,22 @@ class Bgysrisk extends \yii\db\ActiveRecord
 
         return json_encode($iliskiler);
     }
+    
+
+    public function getUpdatedByUser()
+    {
+        // Eğer LDAP aktif ise
+        if (Yii::$app->params['giristipi'] == 1) {
+            return $this->hasOne(\app\models\Userbilgi::className(), ['kisi_id' => 'updated_by']);
+        }
+
+        // Normal kullanıcı
+        return $this->hasOne(\app\models\Userdb::className(), ['id' => 'updated_by']);
+}
+
+
+
+
 
 
     public function getOlasilikOnceki()
@@ -194,6 +243,11 @@ class Bgysrisk extends \yii\db\ActiveRecord
     public function getVarlik0()
     {
         return $this->hasOne(Bgysvarlikenvanteri::className(), ['id' => 'varlik']);
+    }
+
+    public function getRiskKabulleri()
+    {
+        return $this->hasMany(Bgysriskkabul::className(), ['riskid' => 'id']);
     }
 
 }

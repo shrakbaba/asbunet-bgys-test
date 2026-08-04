@@ -54,7 +54,7 @@ use yii\helpers\imdat;
             [
                 'value'=>function ($data)
                     {
-                        return Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->soyad.' / '.@$data->sorumlu0->username ;
+                        return @Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$data->sorumlu])->soyad.' / '.@$data->sorumlu0->username ;
                     },
                 'label'=>'Sorumlu',
             ],

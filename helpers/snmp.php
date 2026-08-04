@@ -8,9 +8,9 @@ class snmp {
 
     private $snmpInstance;
     private $VERSION = SNMP::VERSION_1;
-    private $HOST = '192.168.0.150';
-    private $passwordRead = '000000000000';
-    private $passwordWrite = 'private';
+    private $HOST;
+    private $passwordRead;
+    private $passwordWrite;
     private $releys = array(1 => '1.3.6.1.4.1.19865.1.2.1.1.0',
         2 => '1.3.6.1.4.1.19865.1.2.1.2.0');
     private $allPorts = array('3' => '1.3.6.1.4.1.19865.1.2.1.33.0',
@@ -23,6 +23,10 @@ class snmp {
      * @param string $action
      */
     public function __construct($action) {
+        $this->HOST = Yii::$app->params['snmpHost'] ?? '';
+        $this->passwordRead = Yii::$app->params['snmpReadCommunity'] ?? '';
+        $this->passwordWrite = Yii::$app->params['snmpWriteCommunity'] ?? '';
+
         if (in_array($action, array('read', 'write'))) {
             if (strcmp($action, 'read') === 0) {
                 $this->_read();

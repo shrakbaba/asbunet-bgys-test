@@ -10,7 +10,9 @@ $this->params['breadcrumbs'][] = ['label' => 'Olay Kayıtları', 'url' => ['inde
 ?>
 <div class="olaykayit-create">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <?php if (!Yii::$app->request->isAjax) { ?>
+        <h1><?= Html::encode($this->title) ?></h1>
+    <?php } ?>
 
     <?= $this->render('_form', [
         'model' => $model,

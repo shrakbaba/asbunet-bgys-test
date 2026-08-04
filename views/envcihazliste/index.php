@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use kartik\grid\GridView;
-use yii\widgets\Pjax;
 use yii\bootstrap\Modal;
 use yii\helpers\Url;
 
@@ -42,7 +41,6 @@ td {
 <div class="envcihazliste-index">
 
    
-    <?php Pjax::begin(['id' => 'some-id', 'timeout' => false]); ?>
     <?php
         Modal::begin([
             'id'=>'modal',
@@ -50,6 +48,21 @@ td {
         ]);
 
             echo "<div id='modalContent'></div>";
+        Modal::end();
+
+        Modal::begin([
+            'id' => 'cihaz-sil-modal',
+            'header' => '<h4 class="modal-title"><span class="glyphicon glyphicon-warning-sign"></span> Silme Onayı</h4>',
+            'footer' => Html::button('Vazgeç', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) . ' ' .
+                Html::a('Evet, Sil', '#', [
+                    'id' => 'cihaz-sil-onay',
+                    'class' => 'btn btn-danger',
+                    'data-method' => 'post',
+                    'data-pjax' => '0',
+                ]),
+        ]);
+        echo '<p>Bu cihaz kaydını silmek istediğinizden emin misiniz?</p>';
+        echo '<p class="text-muted">Cihaza ait yüklenmiş dosya da silinir. Bu işlem geri alınamaz.</p>';
         Modal::end();
 
         $gridColumns = [
@@ -124,26 +137,25 @@ td {
                 'buttons' => [                                       
                     'view' => function ($url,$model) {
                         return  ( 
-                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success' ,'title'=>"İncele"])                      
+                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])
                             );
                          },          
                     'update' => function($url, $model) {   //hertürlü
                         return 
                                // Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url, ['title' => Yii::t('app', 'Update')])
-                                Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning' ,'title'=>"Güncelle"]) ;
+                                Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"]) ;
                             
                     },
                     'delete' => function($url, $model) {   //onaylanmamışsa ve kesin başvuru yapmamışsa
-                        return  Html::a('<span class="glyphicon glyphicon-trash"></span>', 
-                                                        ['delete', 'id'=>$model->id] ,
-                                                        [   'class' => 'btn btn-danger',
-                                                            'data-pjax' => '0',
-                                                            'title'=>"Sil",
-                                                            'data' => [
-                                                                'confirm' => 'Bu kaydın dosyasını silmek istediğinizden emin misiniz?',
-                                                                'method' => 'post',
-                                                            ]
-                                                        ]) ;
+                        $cihazBilgisi = @$model->cihazTuru->cihaz_turu . ' / ' .
+                            @$model->marka->marka . ' / ' . @$model->model->model;
+
+                        return Html::a('<span class="glyphicon glyphicon-trash"></span>', '#', [
+                            'class' => 'btn btn-danger btn-xs cihaz-sil',
+                            'data-url' => Url::to(['delete', 'id'=>$model->id]),
+                            'data-ad' => $cihazBilgisi,
+                            'title' => "Sil",
+                        ]);
                             
                     } 
                 ]     
@@ -151,30 +163,30 @@ td {
         ];
         $butonlar=[
             [
-                'content' => Html::a('Özet', ['dashboard'], ['class' => 'btn btn-info btn-lg',"style"=>"float:right;" ]) , 
-                'options' => ['class' => 'btn-group']
+                'content' => Html::a('Özet', ['dashboard'], ['class' => 'btn btn-info']) ,
+                'options' => ['class' => 'btn-group bgys-env-nav']
             ],
             [
-                'content' => Html::button('Cihaz Ekle', ['value' => Url::to(['envcihazliste/create']),'class' => 'btn btn-success btn-lg modalButton2']) , 
-                'options' => ['class' => 'btn-group']
+                'content' => Html::button('Cihaz Ekle', ['value' => Url::to(['/envcihazliste/create']),'class' => 'btn btn-success modalButton2']) ,
+                'options' => ['class' => 'btn-group bgys-env-nav']
             ],
             [
-                'content' => Html::button("Modeller",['class'=>'btn btn-lg btn-secondary',
-                                'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmodel/index']) . "';"
-                            ]), 
-                'options' => ['class' => 'btn-group']
-            ],
-            [
-                'content' =>Html::button("Markalar",['class'=>'btn btn-lg btn-warning',
+                'content' =>Html::button("Markalar",['class'=>'btn btn-warning',
                                 'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmarka/index']) . "';"
                             ]), 
-                'options' => ['class' => 'btn-group']
+                'options' => ['class' => 'btn-group bgys-env-nav']
             ],
             [
-                'content' => Html::button("Cihaz Türleri",['class'=>'btn btn-lg btn-danger',
+                'content' => Html::button("Modeller",['class'=>'btn btn-secondary',
+                                'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmodel/index']) . "';"
+                            ]), 
+                'options' => ['class' => 'btn-group bgys-env-nav']
+            ],
+            [
+                'content' => Html::button("Cihaz Türleri",['class'=>'btn btn-danger',
                                 'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envcihazturu/index']) . "';"
                             ]), 
-                'options' => ['class' => 'btn-group']
+                'options' => ['class' => 'btn-group bgys-env-nav']
             ],
             //'{export}',
             //'{toggleData}',
@@ -226,10 +238,9 @@ td {
 
 <?php $this->registerJs(
 'function init_click_handlers(){
-       $(".modalButton2").click(function() {
-        //alert(fID);
+       $(".modalButton2").off("click").on("click", function() {
             $.get(
-                "create",
+                $(this).attr("value"),
                 function (data)
                 {
                     $("#modal").find(".modal-body").html(data);
@@ -237,11 +248,11 @@ td {
                     $("#modal").modal("show");              
                 }    
             );    
-    }); $(".modalButton3").click(function() {
+    }); $(".modalButton3").off("click").on("click", function() {
         var fID = $(this).closest("tr").data("key");
         //alert(fID);
             $.get(
-                "update",
+                "' . Url::to(['/envcihazliste/update']) . '",
                 {  id: fID   },
                 function (data)
                 {
@@ -251,11 +262,11 @@ td {
                 }    
             );    
     });
-    $(".modalButton4").click(function() {
+    $(".modalButton4").off("click").on("click", function() {
         var fID = $(this).closest("tr").data("key");
         //alert(fID);
             $.get(
-                "view",
+                "' . Url::to(['/envcihazliste/view']) . '",
                 {  id: fID   },
                 function (data)
                 {
@@ -274,7 +285,27 @@ $("#some_pjax_id").on("pjax:success", function() {
 
 ');?>
 
-    <?php Pjax::end(); ?>
+<?php
+$this->registerJs(<<<JS
+$(document).off('click.cihazSil', '.cihaz-sil').on('click.cihazSil', '.cihaz-sil', function (event) {
+    event.preventDefault();
+
+    var modal = $('#cihaz-sil-modal');
+    var icerik = $('<div>');
+    icerik.append($('<p>').append($('<strong>').text($(this).data('ad'))).append(' cihaz kaydını silmek istediğinizden emin misiniz?'));
+    icerik.append($('<p>', {
+        'class': 'text-muted',
+        text: 'Cihaza ait yüklenmiş dosya da silinir. Bu işlem geri alınamaz.'
+    }));
+
+    modal.find('.modal-body').empty().append(icerik);
+    $('#cihaz-sil-onay').attr('href', $(this).data('url'));
+    modal.modal('show');
+});
+JS
+);
+?>
+
 <style type="text/css">
     td a span {
         color: #f9fafc !important;
@@ -286,6 +317,10 @@ $("#some_pjax_id").on("pjax:success", function() {
     .panel-primary {
         border-color: #772043 !important;
         margin-top: 10px;
+    }
+    #cihaz-sil-modal .modal-header {
+        background-color: #772043;
+        color: #fff;
     }
     tr th a{
         color: #3c8dbc !important;

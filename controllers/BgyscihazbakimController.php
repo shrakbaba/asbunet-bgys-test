@@ -24,6 +24,12 @@ class BgyscihazbakimController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'user'=>'user',
@@ -40,7 +46,7 @@ class BgyscihazbakimController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['create','update','delete','pdfsil'],
+                        'actions' => ['create','update','delete'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -58,6 +64,8 @@ class BgyscihazbakimController extends Controller
 
     public function actionMailat()  //bakım kayıtlarının hatırlatması için crobtab ile çağırılacak
     {
+        bgys::cronErisiminiDogrula();
+
         $bakimlar=Bgyscihazbakim::find()->all();  //Tüm kayıtlar
         if ($bakimlar) {
             foreach ($bakimlar as $key => $value) {
@@ -71,18 +79,22 @@ class BgyscihazbakimController extends Controller
                $service_tag=@$cihaz->service_tag;
                // $zimmetemail=null;
                 $maillistesi=[];
-               if ($cihaz->zimmet) { //zimmet yapılmışsa
-                    //$zimmetemail=$cihaz->zimmet0->email;
-                    array_push($maillistesi,$cihaz->zimmet0->email);
+               if ($cihaz && $cihaz->zimmet) { //zimmet yapılmışsa
+                    $zimmetEmail = bgys::zimmetEmail($cihaz->zimmet);
+                    if ($zimmetEmail) {
+                        array_push($maillistesi, $zimmetEmail);
+                    }
                }
 
-               $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
+		        $maillistesi = bgys::mailListesiOlustur('cihazBakim', $maillistesi);
+
+               /*$yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
                //$temsilciemailleri=[];
                 if ($yonetimtemsilcisi) {
                     foreach ($yonetimtemsilcisi as $key2 => $value2) {
                         array_push($maillistesi,$value2->user->email);
                     }
-                }
+                }*/
             
                 for ($i=0; $i <3 ; $i++) { 
                     if ($periyod=="1ay")      {  $a=1;  }
@@ -115,7 +127,8 @@ class BgyscihazbakimController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('view', [
+        $renderMethod = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$renderMethod('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -126,7 +139,7 @@ class BgyscihazbakimController extends Controller
 
         if ($model->load(Yii::$app->request->post())) 
             {
-                $model->kayittarihi=date('Y-m-d');
+                $model->kayittarihi=Yii::$app->formatter->asDate(time(), 'php:Y-m-d');
                 
                 $model->bakimtarihi=imdat::tomysqldate($model->bakimtarihi);
 
@@ -176,6 +189,10 @@ class BgyscihazbakimController extends Controller
                         //var_dump($model->errors);exit;           
 
                     if ($model->save()) {
+                        if (Yii::$app->request->isAjax) {
+                            Yii::$app->session->setFlash('success','Bakım kaydı oluşturuldu.');
+                            return '<script>window.location.reload();</script>';
+                        }
                         return $this->redirect(['view', 'id' => $model->id]);
                     }else{
                         Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
@@ -204,13 +221,16 @@ class BgyscihazbakimController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $eskiformlar=json_decode($model->bakimformlari);
+        $eskiformlar=json_decode($model->bakimformlari ?: '[]', true);
+        if (!is_array($eskiformlar)) {
+            $eskiformlar = [];
+        }
         //var_dump($eskiformlar);exit;
          $model->bakimtarihi = date("d/m/Y", strtotime($model->bakimtarihi));
 
         if ($model->load(Yii::$app->request->post())) 
             {
-                $model->kayittarihi=date('Y-m-d');
+                $model->kayittarihi=Yii::$app->formatter->asDate(time(), 'php:Y-m-d');
                 $model->bakimtarihi=imdat::tomysqldate($model->bakimtarihi);
 
                 if (UploadedFile::getInstance($model,'file')) {
@@ -254,6 +274,10 @@ class BgyscihazbakimController extends Controller
                         //var_dump($model->errors);exit;           
                             
                         if ($model->save()) {
+                            if (Yii::$app->request->isAjax) {
+                                Yii::$app->session->setFlash('success','Bakım kaydı güncellendi.');
+                                return '<script>window.location.reload();</script>';
+                            }
                             return $this->redirect(['view', 'id' => $model->id]);
                         }else{
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
@@ -269,7 +293,8 @@ class BgyscihazbakimController extends Controller
 
             
 
-            return $this->render('update', [
+            $renderMethod = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+            return $this->$renderMethod('update', [
                 'model' => $model,
             ]);
         }

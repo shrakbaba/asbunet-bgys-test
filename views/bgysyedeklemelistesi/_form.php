@@ -41,7 +41,7 @@ use dosamigos\datepicker\DatePicker;
     <?= $form->field($model, 'yedeklemezamani')->dropDownList((array(1 =>"08:00-17:00",2 =>"Haftaiçi günler",3 =>"Haftanın her günü",4 =>"Her ayın ilk günü",5 =>"Her çarşamba",6 =>"Tek yedek")),['prompt' => 'Yedekleme Zamanı']) ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

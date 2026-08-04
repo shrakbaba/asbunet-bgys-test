@@ -17,15 +17,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="envcihazliste-index">
 
 	<h1><?= Html::encode($this->title) ?></h1>
-<p>
+<p class="bgys-env-nav">
         <?= Html::a('Cihaz Listesi', ['index'], ['class' => 'btn btn-success']) ?>
 
-        <?= Html::button("Modeller",['class'=>'btn btn-secondary',
-                        'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmodel/index']) . "';"
-                    ])
-        ?>
         <?= Html::button("Markalar",['class'=>'btn btn-warning',
                         'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmarka/index']) . "';"
+                    ])
+        ?>
+        <?= Html::button("Modeller",['class'=>'btn btn-secondary',
+                        'onclick'=>"window.location.href = '" . \Yii::$app->urlManager->createUrl(['/envmodel/index']) . "';"
                     ])
         ?>
         <?= Html::button("Cihaz Türleri",['class'=>'btn btn-danger',
@@ -33,28 +33,43 @@ $this->params['breadcrumbs'][] = $this->title;
                     ])
         ?>
     </p>
-<div style="display:inline-block;width:50%;">
+<?php
+$toplamCihaz = 0;
+foreach ((array)$tur as $turSatiri) {
+	$toplamCihaz += (int)@$turSatiri[1];
+}
+?>
+<div class="row" style="margin-top:15px;margin-bottom:15px;">
+	<div class="col-sm-3">
+		<div class="well well-sm"><strong>Toplam Cihaz Adedi</strong><br><?= $toplamCihaz ?></div>
+	</div>
+	<div class="col-sm-3">
+		<div class="well well-sm"><strong>Cihaz Türü</strong><br><?= count((array)$tur) ?></div>
+	</div>
+	<div class="col-sm-3">
+		<div class="well well-sm"><strong>Marka</strong><br><?= count((array)$markalardrill) ?></div>
+	</div>
+	<div class="col-sm-3">
+		<div class="well well-sm"><strong>Model</strong><br><?= count((array)$model) ?></div>
+	</div>
+</div>
+<div style="display:inline-block;width:50%; min-height:360px; vertical-align:top;">
+	<?php if (empty($tur)) { ?>
+		<p class="text-muted">Cihaz türü özeti için veri bulunamadı.</p>
+	<?php } else { ?>
 	<?php echo Highcharts::widget([
 		'scripts' => [
-			'highcharts-3d',
-			'modules/drilldown',
 			'modules/exporting',
-			'themes/sand-signika',
 		],
 		'options' => [
 			"chart" => [
 				"type" => "pie",
-				"options3d" => [
-					"enabled" => true,
-					"alpha" => 35
-				]
+				"height" => 330
 			],
 			'title' => ['text' => 'Cihaz Türleri'],
 			'plotOptions' => [
 				'pie' => [
-					"size"=>"50%",
-					"innerSize" => 50,
-					"depth" => 25,
+					"size"=>"70%",
 					'cursor' => 'pointer',
 					'allowPointSelect'=> true,
 					'dataLabels'=> [
@@ -72,7 +87,11 @@ $this->params['breadcrumbs'][] = $this->title;
     ],
 ]);
 ?>
-</div><div style="display:inline-block;width:50%;">
+	<?php } ?>
+</div><div style="display:inline-block;width:50%; min-height:360px; vertical-align:top;">
+<?php if (empty($markalardrill)) { ?>
+	<p class="text-muted">Marka özeti için veri bulunamadı.</p>
+<?php } else { ?>
 <?php 
     /*
     echo Highcharts::widget([
@@ -100,13 +119,14 @@ $this->params['breadcrumbs'][] = $this->title;
 	*/
 
 	echo Highcharts::widget([
+		'scripts' => [
+			'modules/drilldown',
+			'modules/exporting',
+		],
 		'options' => [
 			"chart" => [
 				"type" => "pie",
-				"options3d" => [
-					"enabled" => true,
-					"alpha" => 35
-				]
+				"height" => 330
 			],
 			"title" => [
 				"text" => "Ürün Dağılımları"
@@ -116,9 +136,7 @@ $this->params['breadcrumbs'][] = $this->title;
 			],
 			"plotOptions" => [
 				"pie" => [
-					"size"=>"50%",
-					"innerSize" => 50,
-					"depth" => 25,
+					"size"=>"70%",
 					'allowPointSelect'=> true,
 				],
 				"series" => [
@@ -141,4 +159,68 @@ $this->params['breadcrumbs'][] = $this->title;
 		]
 	]);
 
-?></div>
+?>
+<?php } ?>
+</div>
+
+<div style="display:block;width:100%; min-height:420px; vertical-align:top; margin-top:20px;">
+<?php if (empty($model)) { ?>
+	<p class="text-muted">Model özeti için veri bulunamadı.</p>
+<?php } else { ?>
+<?php
+	echo Highcharts::widget([
+		'scripts' => [
+			'modules/exporting',
+		],
+		'options' => [
+			"chart" => [
+				"type" => "column",
+				"height" => 420
+			],
+			"title" => [
+				"text" => "Modellere Göre Dağılım"
+			],
+			"subtitle" => [
+				"text" => "Cihaz model adetleri"
+			],
+			"xAxis" => [
+				"type" => "category",
+				"labels" => [
+					"rotation" => -45,
+					"style" => [
+						"fontSize" => "11px"
+					]
+				]
+			],
+			"yAxis" => [
+				"min" => 0,
+				"title" => [
+					"text" => "Adet"
+				]
+			],
+			"legend" => [
+				"enabled" => false
+			],
+			"tooltip" => [
+				"pointFormat" => "Adet: <b>{point.y}</b>"
+			],
+			"plotOptions" => [
+				"series" => [
+					"dataLabels" => [
+						"enabled" => true,
+						"format" => "{point.y}"
+					]
+				]
+			],
+			"series" => [
+				[
+					"name" => "Modeller",
+					"colorByPoint" => true,
+					"data" => $model
+				]
+			],
+		]
+	]);
+?>
+<?php } ?>
+</div>

@@ -4,7 +4,6 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 use yii\helpers\ArrayHelper;
-use app\models\Authitem;
 use app\models\Userdb;
 use app\models\Userbilgi;
 use kartik\select2\Select2;
@@ -28,7 +27,7 @@ use kartik\select2\Select2;
 		]); */
 	?>
 
-    <?= $form->field($model, 'item_name')->dropDownList(ArrayHelper::map(Authitem::find()->all(),'name','name'), ['prompt' => 'Rol Seçiniz']);  ?>
+    <?= $form->field($model, 'item_name')->dropDownList(\app\models\Authassignment::aktifRolListesi(), ['prompt' => 'Rol Seçiniz']);  ?>
 
     <?php 
         if (Yii::$app->params['giristipi']==1) {

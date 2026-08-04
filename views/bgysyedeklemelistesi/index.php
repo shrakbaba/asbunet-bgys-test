@@ -37,6 +37,8 @@ td {
     padding-top: 2px !important;
     padding-bottom: 2px !important;    
     vertical-align: middle !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
 }
 </style>
 <div class="bgysyedeklemelistesi-index">
@@ -81,11 +83,11 @@ td {
             ],
             [
                 'attribute' => 'yedekalinacak',
-                'headerOptions' => ['style' => 'width:20%'],
+                'headerOptions' => ['style' => 'width:15%'],
             ],
             [
                 'attribute'=>'yedeklemesekli',
-                'headerOptions' => ['style' => 'width:10%'],
+                'headerOptions' => ['style' => 'width:8%'],
                 'format'=>'raw',                
                 'filter'=>array(1 =>"Full-Incremental", 2 =>"Differantial", 3 =>"Full"),
                 'value'=>function ($data)
@@ -102,7 +104,7 @@ td {
             ],
             [
                 'attribute' => 'yedekleme_yontemi',
-                'headerOptions' => ['style' => 'width:15%'],
+                'headerOptions' => ['style' => 'width:8%'],
             ],
             [
                 'attribute'=>'periyodu',
@@ -127,11 +129,12 @@ td {
             ],            
             [
                 'attribute' => 'yedeklemeyeri',
-                'headerOptions' => ['style' => 'width:15%'],
+                'headerOptions' => ['style' => 'width:8%'],
             ],
             [
                 'attribute' => 'yedeklemezamani',
-                'headerOptions' => ['style' => 'width:10%'],
+                'headerOptions' => ['style' => 'width:8%'],
+                'filter'=>array(1 =>"08:00-17:00",2 =>"Haftaiçi günler",3 =>"Haftanın her günü",4 =>"Her ayın ilk günü",5 =>"Her çarşamba",6 =>"Tek yedek"),
                 'value'=>function ($data)
                     {
                         return 
@@ -160,6 +163,8 @@ td {
             ],
             [
                 'class' => 'yii\grid\ActionColumn',
+                'header'=>'İşlemler',
+                'contentOptions' => ['class' => 'bgys-grid-actions'],
                 'headerOptions' => ['style' => 'width:8%'],
                 'template' => '{view}{update}{delete}' ,  
                 'buttons' => [                                      
@@ -167,19 +172,19 @@ td {
                         return  ( 
                             // Html::a('<span class="glyphicon glyphicon-eye-open">', ['view','id'=>$model->id], ['class' => 'btn btn-success','title'=>"İncele"] )
 
-                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success' ,'title'=>"İncele"])                      
+                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])                      
                             );
                          },
                     'update' => function ($url,$model) {
                         return  ( 
-                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning' ,'title'=>"Güncelle"])                         
+                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"])                         
                             );
                          },
                     'delete' => function ($url,$model) {
                         return  (  
                             Html::a('<span class="glyphicon glyphicon-trash"></span>', 
                                                 ['delete', 'id'=>$model->id] ,
-                                                [   'class' => 'btn btn-danger',
+                                                [   'class' => 'btn btn-danger btn-xs',
                                                     'data-pjax' => '0',
                                                     'title'=>"Sil",
                                                     'data' => [

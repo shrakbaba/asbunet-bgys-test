@@ -26,6 +26,12 @@ class BgysdiftalepController extends Controller
       public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -65,7 +71,8 @@ class BgysdiftalepController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('view', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$render('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -88,7 +95,7 @@ class BgysdiftalepController extends Controller
             $model->olusturan_kisi=Yii::$app->user->id;
             if ($model->save()) {
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'diftalep tanimlama','dif talep:'.$model->dif_konusu);
-               return $this->redirect(['view', 'id' => $model->id]);
+               return $this->redirect(['index']);
             }else{
                 Yii::$app->session->setFlash('error','Hata oluştu.');
                 return $this->redirect(['index']);
@@ -116,13 +123,14 @@ class BgysdiftalepController extends Controller
                 $model->olusturan_kisi=Yii::$app->user->id;
                 if ($model->save()) {
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'diftalep guncelleme','dif talep:'.$model->dif_konusu);
-                   return $this->redirect(['view', 'id' => $model->id]);
+                   return $this->redirect(['index']);
                 }else{
                     Yii::$app->session->setFlash('error','Hata oluştu.');
                     return $this->redirect(['index']);
                 }
             }
-            return $this->render('update', [
+            $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+            return $this->$render('update', [
                 'model' => $model,
             ]);
         }else{
@@ -136,49 +144,91 @@ class BgysdiftalepController extends Controller
         //echo "<pre>";echo date("Y-m-d H:i:s");;exit;
         $riskid=$id;
         $risk=Bgysrisk::findOne($id);
+        if ($risk === null) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
         $riskadi=$risk->risk;
 
-        $model = new Bgysdiftalep();
-        //$difno=Bgysdiftalep::find()->max('dif_no');
-        $difno=count(Bgysdiftalep::find()->all());
+        $mevcutDif = Bgysdiftalep::find()
+            ->where(['regexp', 'risk_iliskisi', '(^|[^0-9])' . intval($riskid) . '([^0-9]|$)'])
+            ->orWhere(['dif_konusu' => $riskadi . " adlı risk için açılan DİF kaydı."])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
 
-        //var_dump($difno);exit;
+        if ($mevcutDif !== null) {
+            if (imdat::difform($mevcutDif->id)) {
+                if (Yii::$app->request->isAjax) {
+                    return $this->actionDifform($mevcutDif->id, imdat::difformonaydurumu($mevcutDif->id) ? 1 : 0);
+                }
 
-        $model->dif_no=strval($difno+1);
-        $model->olusturan_kisi=Yii::$app->user->id;
-        $model->dif_konusu=$riskadi." adlı risk için açılan DİF kaydı.";
+                return $this->redirect([
+                    'difform',
+                    'i' => $mevcutDif->id,
+                    'a' => imdat::difformonaydurumu($mevcutDif->id) ? 1 : 0,
+                ]);
+            }
+
+            if (Yii::$app->request->isAjax) {
+                return $this->actionDifformuac($mevcutDif->id);
+            }
+
+            return $this->redirect(['difformuac', 'i' => $mevcutDif->id]);
+        }
+
+        $diftalep = new Bgysdiftalep();
+        $diftalep->dif_no=strval(intval(Bgysdiftalep::find()->max('dif_no'))+1);
+        $diftalep->olusturan_kisi=Yii::$app->user->id;
+        $diftalep->dif_konusu=$riskadi." adlı risk için açılan DİF kaydı.";
+        $diftalep->risk_iliskisi=json_encode([intval($riskid)]);
         $kisi=Yii::$app->user->identity->attributes ;
 
         if (Yii::$app->params['giristipi']==1) {
-            $model->talep_eden=@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->soyad.' / '.$kisi['username'];
+            $diftalep->talep_eden=@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->soyad.' / '.$kisi['username'];
         }else{
-            $model->talep_eden=$kisi['ad'].' '.$kisi['soyad'].' / '.$kisi['username'];
+            $diftalep->talep_eden=$kisi['ad'].' '.$kisi['soyad'].' / '.$kisi['username'];
         } 
         
-        //var_dump($model->talep_eden);exit;
+        //var_dump($diftalep->talep_eden);exit;
         //$model->talep_eden=$kisi['ad']." ".$kisi['soyad'];
 
         // $model->talep_eden=@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$kisi['id']])->soyad.
-        $model->durum=0;
-        $model->planlanan_tarih=date("Y-m-d H:i:s");
+        $diftalep->durum=0;
+        $diftalep->talep_tarihi=date("Y-m-d H:i:s");
+        $diftalep->planlanan_tarih=date("Y-m-d H:i:s");
 
-        /*
-        $model->validate();
-        var_dump($model->errors);
-        echo "2";exit;
-        */
-            if ($model->save()) {
+        $model = new Bgysdiftakip();
+        $model->kokneden=$risk->yuksek_riskin_sebebi;
 
-                //echo "1";exit;
-                            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'diftalep otomatik','dif talep:'.$model->dif_konusu);
-               //return $this->redirect(['difformuacoto','i' => $model->id, 'r' => $model->id]);
-               return $this->redirect(['difformuacoto','id'=>$model->id,'rsk'=>$id]);
-                // return $this->redirect(['deneme','a' => 33, 'b' => 888]);
-               //bgysdiftalep/difformuac?i=1
-            }else{
-                Yii::$app->session->setFlash('error','Hata oluştu.');
+        if ($model->load(Yii::$app->request->post())) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $diftalep->dif_no=strval(intval(Bgysdiftalep::find()->max('dif_no'))+1);
+                if (!$diftalep->save()) {
+                    throw new \Exception('DİF talep kaydı oluşturulamadı.');
+                }
+
+                $model->diftalep_id=$diftalep->id;
+                if ($model->tamamlanmatarihi) {
+                    $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
+                }
+                $model->dif_sorumlusu=Yii::$app->user->id;
+
+                if (!$model->save()) {
+                    throw new \Exception('DİF takip kaydı oluşturulamadı.');
+                }
+
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'diftalep otomatik','dif talep:'.$diftalep->dif_konusu);
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'dif takip otomatik','dif talep:'.$model->kokneden);
+                $transaction->commit();
                 return $this->redirect(['index']);
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error','Hata oluştu.');
             }
+        }
+
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
     }
 
     public function actionDeneme($a,$b,$c=0)
@@ -214,7 +264,8 @@ class BgysdiftalepController extends Controller
                 return $this->redirect(['index']);
             }   
         }
-        return $this->render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
     }
 
     public function actionDifformuac($i)
@@ -226,7 +277,10 @@ class BgysdiftalepController extends Controller
         if ($model->load(Yii::$app->request->post())) {
             
             $model->diftalep_id=$i;
-            $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
+            
+            if ($model->tamamlanmatarihi) {
+                $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
+            }
             $model->dif_sorumlusu=Yii::$app->user->id;
             
             //$model->validate(); 
@@ -240,7 +294,8 @@ class BgysdiftalepController extends Controller
                 return $this->redirect(['index']);
             }   
         }
-        return $this->render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
     }
 
     public function actionDifform($i,$a)
@@ -251,15 +306,32 @@ class BgysdiftalepController extends Controller
         $diftalep=Bgysdiftalep::findOne($talepid);
         
         if ($a) {
-            $model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
-            return $this->render('onaylidiftakip', ['model' => $model,'diftalep' => $diftalep]);
+        	if ($model->tamamlanmatarihi) {
+            	$model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
+            }
+
+            //$model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
+            $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+            return $this->$render('onaylidiftakip', ['model' => $model,'diftalep' => $diftalep]);
         }else{
-            $model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
+           // $model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
+
+            //echo "<pre>";var_dump($model->tamamlanmatarihi);exit;
+            if ($model->tamamlanmatarihi) {
+            	$model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
+            }
+
 
             if ($model->load(Yii::$app->request->post())) {
 
+            
                 $model->diftalep_id=$i;
-                $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
+           // echo "<pre>";var_dump($model->tamamlanmatarihi);exit;
+            if ($model->tamamlanmatarihi) {
+            	$model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
+            }
+
+               // $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
                 $model->dif_sorumlusu=Yii::$app->user->id;
 
                 if ($model->save()) {
@@ -270,7 +342,8 @@ class BgysdiftalepController extends Controller
                     return $this->redirect(['index']);
                 }   
             }
-            return $this->render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
+            $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+            return $this->$render('diftakip', ['model' => $model,'diftalep' => $diftalep]);
         }
     }
 

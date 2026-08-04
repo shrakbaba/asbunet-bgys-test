@@ -47,7 +47,7 @@ class Envcihazliste extends \yii\db\ActiveRecord
             (Yii::$app->params['giristipi']==1) 
             ? [['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' =>\Edvlerblog\Adldap2\model\UserDbLdap::className() , 'targetAttribute' => ['zimmet' => 'id']]
             : [['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['zimmet' => 'id']],
-            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','maxSize' => 1024 * 1024 * 1],  //max 1Mb
+            [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 1],  //max 1Mb
         ];
     }
 

@@ -21,12 +21,19 @@ class BgysfirmabilgiController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                    'pdfsil' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index','view'],
+                        'actions' => ['index','view','belge'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -65,12 +72,44 @@ class BgysfirmabilgiController extends Controller
         ]);
     }
 
+    public function actionBelge($id)
+    {
+        $model = $this->findModel($id);
+        if (!$model->belge) {
+            throw new NotFoundHttpException('Belge bulunamadı.');
+        }
+
+        $path = Yii::$app->basePath . '/web/uploads/bgys/' . md5("firma") . '/' . $model->belge;
+        if (!is_file($path)) {
+            throw new NotFoundHttpException('Belge dosyası bulunamadı.');
+        }
+
+        return Yii::$app->response->sendFile($path, $model->belge, [
+            'mimeType' => 'application/pdf',
+            'inline' => true,
+        ]);
+    }
+
     public function actionCreate()
     {
         $model = new Bgysfirmabilgi();
         //echo md5("firma");exit;
 
         if ($model->load(Yii::$app->request->post())) {
+            $model->faaliyet_alani = $this->faaliyetAlaniniTemizle($model->faaliyet_alani);
+            if (empty($model->faaliyet_alani)) {
+                $model->faaliyet_alani = null;
+            }
+
+            if (!$model->validate()) {
+                return $this->renderAjax('create', [
+                    'model' => $model,
+                ]);
+            }
+
+            if ($model->faaliyet_alani) {
+                $model->faaliyet_alani=json_encode($model->faaliyet_alani);
+            }
 
             $model->file =UploadedFile::getInstance($model,'file');  
                 if ($model->file!=null) {  
@@ -78,19 +117,22 @@ class BgysfirmabilgiController extends Controller
                     $model->belge = Yii::$app->security->generateRandomString().".{$ext}";
                     $path = Yii::getAlias('@env_dosya') ."bgys/".md5("firma")."/".$model->belge;
 
-                    if ($model->validate()) {               
-                        if ($model->save()) {
+                    if ($model->validate()) {
+                        if ($model->save(false)) {
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'firma bilgi tanimlama','firma:'.$model->firmaadi);
                             $model->file->saveAs($path);
-                            return $this->redirect(['view', 'id' => $model->id]);
+                            return $this->redirect(['index']);
                         }
                     }else{
                         Yii::$app->session->setFlash('error','Hata oluştu. Tekrar deneyiniz.');
                         return $this->redirect(['index']);
                     }
                 }  else{
-                    if ($model->save()) { 
-                        return $this->redirect(['view', 'id' => $model->id]);
+                    if ($model->save(false)) { 
+                        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'firma bilgi tanimlama','firma:'.$model->firmaadi);
+
+                        Yii::$app->session->setFlash('success','Firma Kaydedildi.');
+                        return $this->redirect(['index']);
                     }
                 } 
             //return $this->redirect(['view', 'id' => $model->id]);
@@ -107,6 +149,20 @@ class BgysfirmabilgiController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) { 
+            $model->faaliyet_alani = $this->faaliyetAlaniniTemizle($model->faaliyet_alani);
+            if (empty($model->faaliyet_alani)) {
+                $model->faaliyet_alani = null;
+            }
+
+            if (!$model->validate()) {
+                return $this->renderAjax('update', [
+                    'model' => $model,
+                ]);
+            }
+
+            if ($model->faaliyet_alani) {
+                $model->faaliyet_alani=json_encode($model->faaliyet_alani);
+             }
 
             $model->file =UploadedFile::getInstance($model,'file'); 
             if ($model->file!=null) {  
@@ -114,19 +170,19 @@ class BgysfirmabilgiController extends Controller
                     $model->belge = Yii::$app->security->generateRandomString().".{$ext}";
                     $path = Yii::getAlias('@env_dosya') ."/bgys/".md5("firma")."/".$model->belge;
 
-                    if ($model->validate()) {               
-                        if ($model->save()) {
+                    if ($model->validate()) {
+                        if ($model->save(false)) {
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'firma bilgi guncelleme','firma:'.$model->firmaadi);
                             $model->file->saveAs($path);
-                            return $this->redirect(['view', 'id' => $model->id]);
+                        return $this->redirect(['index']);
                         }
                     }else{
                         Yii::$app->session->setFlash('error','Hata oluştu. Tekrar deneyiniz.');
                         return $this->redirect(['index']);
                     }
                 }  else{
-                    if ($model->save()) { 
-                        return $this->redirect(['view', 'id' => $model->id]);
+                    if ($model->save(false)) { 
+                        return $this->redirect(['index']);
                     }
                 } 
         }
@@ -200,5 +256,18 @@ class BgysfirmabilgiController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    private function faaliyetAlaniniTemizle($faaliyetAlanlari)
+    {
+        $temiz = [];
+        foreach ((array)$faaliyetAlanlari as $faaliyetAlani) {
+            $faaliyetAlani = trim((string)$faaliyetAlani);
+            if ($faaliyetAlani !== '') {
+                $temiz[] = $faaliyetAlani;
+            }
+        }
+
+        return $temiz;
     }
 }

@@ -14,9 +14,20 @@ use dosamigos\datepicker\DatePicker;
 
 <div class="bgysizlemeolcme-form">
 
+
+<?php 
+    $basla=2019;
+    $bitis=date('Y')+2;
+    $itemsfor=[];
+
+    for ($i=$basla; $i<$bitis; $i++) { 
+        $itemsfor[$i]=strval($i);
+    }
+?>
+
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'yil')->dropDownList((array(2020 =>"2020", 2019 =>"2019", 2018 =>"2018")),['prompt' => 'İlgili Yıl'])     ?>
+    <?= $form->field($model, 'yil')->dropDownList(($itemsfor),['prompt' => 'İlgili Yıl'])     ?>
 
     <?= $form->field($model, 'kontrol')->textArea(['rows'=>3,'maxlength' => true]) ?>
 
@@ -36,7 +47,7 @@ use dosamigos\datepicker\DatePicker;
             'autoclose'=>true, 
             'minViewMode'=> "months",
             'format' => 'yyyy-mm',            
-            'endDate' => date('Y-m', strtotime('+3 years')),
+            'endDate' => date('Y-m', strtotime('+1 years')),
             'startDate' => date('Y-m', strtotime('-1 years')),
         ],
         'language'=>'tr'
@@ -58,7 +69,7 @@ use dosamigos\datepicker\DatePicker;
     ?>   
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

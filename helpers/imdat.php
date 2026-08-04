@@ -75,7 +75,7 @@ class imdat
 	
 	}
 
-	public function userbilgibenimmi($id)
+	public static function userbilgibenimmi($id)
 	{
 		$kayitkontrol = Yii::$app->db->createCommand('SELECT id FROM user_bilgi where kisi_id='.$id)->queryone();
 		//var_dump(($kayitkontrol));exit;

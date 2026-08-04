@@ -15,31 +15,36 @@ use dosamigos\datepicker\DatePicker;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <div class="col-md-4">
-                        <?= $form->field($model, 'mailhesabi')->widget(yii\widgets\MaskedInput::class, [
-                            'clientOptions' => [ 'alias' =>  'email'  ], 
-                        ]) ?>
-                    </div> 
+    <div class="alert alert-info">
+        Bu kayıt, kurumdan ayrılan kişiye ait e-posta hesabının kapatılıp kapatılmadığını takip etmek için kullanılır.
+        Hatırlatma mailleri Bilgi İşlem mail grubuna gönderilir.
+    </div>
 
-    <div class="col-md-4">
-                        <?= $form->field($model, 'ayrilistarihi')->widget(
-                            DatePicker::className(), [
-                            // inline too, not bad
-                             'inline' => true, 
-                             // modify template for custom rendering
-                            'template' => '<div class="well well-sm" style="background-color: #fff; width:250px">{input}</div>',
-                            'clientOptions' => [
-                                'autoclose' => true,
-                                'format' => 'dd/mm/yyyy', 
-                                'minViewMode'=> "days"
-                            ],
-                            'language'=>'tr'
-                        ]); ?>
-                    </div>
-	<div class="col-md-4">
-        <?= $form->field($model, 'kapatildi')->dropDownList(array(0=>'Hayır',1=>'Evet'), ['prompt' => 'Hesap Kapatildi mi?'])  ?>
-	</div>
-    <div class="form-group col-md-12">
+    <?= $form->field($model, 'mailhesabi')->widget(yii\widgets\MaskedInput::class, [
+        'clientOptions' => [ 'alias' =>  'email'  ],
+        'options' => [
+            'class' => 'form-control',
+            'placeholder' => 'Kapatılacak e-posta hesabı',
+        ],
+    ])->hint('Kapatılması takip edilecek kullanıcı e-posta adresi.') ?>
+
+    <?= $form->field($model, 'ayrilistarihi')->widget(
+        DatePicker::className(), [
+        'clientOptions' => [
+            'autoclose' => true,
+            'format' => 'dd/mm/yyyy',
+            'minViewMode'=> "days"
+        ],
+        'language'=>'tr',
+        'options'=>[
+            'class'=>'form-control',
+            'placeholder'=>"Gün/Ay/Yıl"
+        ],
+    ])->hint('Sistem bu tarihten sonraki 5., 10. ve 15. günlerde hatırlatma üretir.') ?>
+
+    <?= $form->field($model, 'kapatildi')->dropDownList(array(0=>'Hayır',1=>'Evet'), ['prompt' => 'Hesap kapatıldı mı?'])  ?>
+
+    <div class="form-group">
         <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>
 

@@ -1,0 +1,29 @@
+BGYS Ekran Kaydı İndeksi
+Hazırlanma Tarihi: 28.07.2026
+
+Bu klasördeki görseller, BGYS çalışma sonuç raporunda ilgili menü başlıklarının başında kanıt ekran kaydı/görüntüsü olarak kullanılmıştır.
+
+01 - dashboard1.png -> Dashboard genel görünüm
+02 - dashboard2.png -> Dashboard oranlar ve eğitim raporu
+03 - envanter zimmet yönetimi.png -> Envanter/Zimmet yönetimi
+04 - tanımlar1 bilgi sınıfı, eylem matrisi, olasılık, şiddet tablosu, lokasyonlar, departmanlar, kategoriler.png -> Tanımlamalar temel tablolar
+05 - tanımlamalar2 cihaz türü, marka, model, bilgiler.png -> Tanımlamalar cihaz/marka/model/bilgiler
+06 - tedarikçiler.png -> Tedarikçiler
+07 - tedarikçi depğerlendirme.png -> Tedarikçi değerlendirme
+08 - listeler.png -> Listeler
+09 - izleme ölçeği.png -> İzleme ölçme değerlendirme analiz listesi
+10 - varlık envanteri.png -> Varlık envanteri
+11 - risk.png -> Risk analizi
+12 - risk kabul.png -> Risk kabuller
+13 - düzeltici faaliyetler.png -> Düzeltici faaliyetler / DİF
+14 - olay kayıt.png -> Olay yönetimi
+15 - kullanıcı bilgileri.png -> Kullanıcı bilgileri
+16 - rol atama.png -> Rol atama
+17 - roller.png -> Roller
+18 - rol ilişkileri.png -> Rol ilişkileri
+19 - hareket kayıtları.png -> Hareket kayıtları
+20 - farkındalık eğitimi.png -> Eğitim yönetimi / Farkındalık eğitimi
+21 - farkındalık eğitim sonuçları.png -> Farkındalık eğitim sonuçları
+22 - bakım yönetimi.png -> Bakım yönetimi
+23 - mail hatırlatma.png -> Mail hatırlatma
+24 - sunucu hatırlatma.png -> Sunucu / Yeni VM hatırlatma

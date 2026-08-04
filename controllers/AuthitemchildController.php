@@ -23,18 +23,24 @@ class AuthitemchildController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
                         'actions' => ['index','view'],
-                        'roles' => ['super_admin'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                         'allow' => true,
                         'actions' => ['create','update','delete'],
-                        'roles' => ['super_admin'],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                       'allow' => false,
@@ -62,7 +68,9 @@ class AuthitemchildController extends Controller
 
     public function actionView($parent, $child)
     {
-        return $this->render('view', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('view', [
             'model' => $this->findModel($parent, $child),
         ]);
     }
@@ -73,7 +81,9 @@ class AuthitemchildController extends Controller
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'parent atama','atama:'.$model->parent."=>".$model->child );
-            return $this->redirect(['view', 'parent' => $model->parent, 'child' => $model->child]);
+            return Yii::$app->request->isAjax
+                ? '<script>window.location.reload();</script>'
+                : $this->redirect(['index']);
         }
 
         return $this->renderAjax('create', [
@@ -85,11 +95,16 @@ class AuthitemchildController extends Controller
     {
         $model = $this->findModel($parent, $child);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'parent guncelleme','atama:'.$model->parent."=>".$model->child );
-            return $this->redirect(['view', 'parent' => $model->parent, 'child' => $model->child]);
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'parent guncelleme','atama:'.$model->parent."=>".$model->child );
+            return Yii::$app->request->isAjax
+                ? '<script>window.location.reload();</script>'
+                : $this->redirect(['index']);
         }
 
-        return $this->render('update', [
+        $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+
+        return $this->$render('update', [
             'model' => $model,
         ]);
     }

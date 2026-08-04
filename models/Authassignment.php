@@ -15,6 +15,16 @@ use Yii;
  */
 class Authassignment extends \yii\db\ActiveRecord
 {
+    public static function aktifRolListesi()
+    {
+        return [
+            'BGYS_Ekip_Lideri' => 'BGYS_Ekip_Lideri',
+            'BGYS_Ekip_Uyesi' => 'BGYS_Ekip_Uyesi',
+            'BGYS_Yonetim_Temsilcisi' => 'BGYS_Yonetim_Temsilcisi',
+            'BGYS_Super_Admin' => 'BGYS_Super_Admin',
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -32,6 +42,7 @@ class Authassignment extends \yii\db\ActiveRecord
             [['item_name', 'user_id'], 'required'],
             [['created_at'], 'integer'],
             [['item_name', 'user_id'], 'string', 'max' => 64],
+            [['item_name'], 'in', 'range' => array_keys(self::aktifRolListesi())],
             [['item_name', 'user_id'], 'unique', 'targetAttribute' => ['item_name', 'user_id']],
             [['item_name'], 'exist', 'skipOnError' => true, 'targetClass' => Authitem::className(), 'targetAttribute' => ['item_name' => 'name']],
         ];

@@ -7,6 +7,7 @@ use app\models\Bgysyedeklemelistesi;
 use app\models\BgysyedeklemelistesiSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 
 /**
@@ -17,6 +18,12 @@ class BgysyedeklemelistesiController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [

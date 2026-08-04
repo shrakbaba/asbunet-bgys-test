@@ -26,6 +26,12 @@ class MailkapatController extends Controller
      public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -57,56 +63,31 @@ class MailkapatController extends Controller
         ];
     }
 
-
     public function actionMailat()  //mail kapatma hatırlatması
     {
-        $kapanacaklar=Mailkapat::find(['kapatildi'=>0])->all();  //Kapatılmamış tüm mailler
+        bgys::cronErisiminiDogrula();
+
+        $kapanacaklar=Mailkapat::find()->where(['kapatildi'=>0])->all();  //Kapatılmamış tüm mailler
+
         if ($kapanacaklar) {
+
             foreach ($kapanacaklar as $key => $value) {
                 $mailhesabi=@$value->mailhesabi;
                 $ayrilistarihi=@$value->ayrilistarihi;
-                $maillistesi=[];
+                $maillistesi=bgys::mailGrubu('mailKapatma');
 
-                $yonetimtemsilcisi=Authassignment::find()->where(['item_name'=>'BGYS_Yonetim_Temsilcisi'])->all();
-                if ($yonetimtemsilcisi) {
-                    foreach ($yonetimtemsilcisi as $key2 => $value2) {
-                        $un = $value2->user->username;
-                       // echo "<pre>";var_dump($un);exit;
-                        //Get the Ldap object for the user.
-                        //$ldapObject holds a class of type Adldap\Models\User from the Adldap project!
-                        // Method 1: uses the default provider given in the configuration above (array key defaultProvider)
-                        $ldapObject = \Yii::$app->ad->search()->findBy('sAMAccountname', $un);
-                        // Method 2: uses the default provider given in the configuration above (array key defaultProvider)
-                        //$ldapObject = \Yii::$app->ad->getDefaultProvider()->search()->findBy('sAMAccountname', $un);
-                        // Method 3: get the provider by name (here name default is used).
-                        //$ldapObject = \Yii::$app->ad->getProvider('default')->search()->findBy('sAMAccountname', $un);
-
-                        //$givenName = $ldapObject['givenname'][0];
-                        //$surname = $ldapObject['sn'][0];
-                        //$displayname = $ldapObject['displayname'][0];
-                        $mail = $ldapObject['mail'][0];
-
-                        //Print all possible attributes
-                        //echo '<pre>' . print_r($ldapObject,true) . '</pre>';
-                        //echo "<pre>";var_dump($mail);exit;
-                        array_push($maillistesi,$mail);
-                    }
-                        array_push($maillistesi,'ali.eren@asbu.edu.tr');
-                }
-                $a=5;  //5. 10. 15. günlerde mail at
-                for ($i=0; $i <3 ; $i++) {  
-                    $y=($i+1)*$a;
+                $hatirlatmaGunleri = [5, 10, 15, 30];  //5. 10. 15. ve 30. günlerde mail at
+                foreach ($hatirlatmaGunleri as $y) {
                     $uyaritarihi=date('Y-m-d',strtotime("+$y days", strtotime($ayrilistarihi)));
                     //bgys::bakima1hafta(imdat::mysqltowebdate($uyaritarihi), $marka, $model, $key, $service_tag, $maillistesi, imdat::mysqltowebdate($bakimtarihi));
                            
                     if (date("Y-m-d")==$uyaritarihi) {
-                        $a=bgys::mailikapat(imdat::mysqltowebdate($uyaritarihi), $mailhesabi, $y, $maillistesi, imdat::mysqltowebdate($ayrilistarihi));
+                        bgys::mailikapat(imdat::mysqltowebdate($uyaritarihi), $mailhesabi, $y, $maillistesi, imdat::mysqltowebdate($ayrilistarihi));
                     }
-                }//echo date("Y-m-d")."<br>";
+                }
             }
         }
     }
-
     /**
      * Lists all Mailkapat models.
      * @return mixed
@@ -130,7 +111,8 @@ class MailkapatController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
+        $renderMethod = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$renderMethod('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -147,10 +129,15 @@ class MailkapatController extends Controller
         if ($model->load(Yii::$app->request->post()) ) {
             $model->ayrilistarihi=imdat::tomysqldate($model->ayrilistarihi);
             if ($model->save()) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->session->setFlash('success','Mail hatırlatma kaydı oluşturuldu.');
+                    return '<script>window.location.reload();</script>';
+                }
                 return $this->redirect(['index']);
             }
         }
-        return $this->render('create', [
+        $renderMethod = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$renderMethod('create', [
             'model' => $model,
         ]);
     }
@@ -172,11 +159,16 @@ class MailkapatController extends Controller
 
             $model->ayrilistarihi=imdat::tomysqldate($model->ayrilistarihi);
             if($model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->session->setFlash('success','Mail hatırlatma kaydı güncellendi.');
+                    return '<script>window.location.reload();</script>';
+                }
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         }
 
-        return $this->render('update', [
+        $renderMethod = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
+        return $this->$renderMethod('update', [
             'model' => $model,
         ]);
     }

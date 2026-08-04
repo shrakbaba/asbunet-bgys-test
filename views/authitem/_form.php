@@ -14,18 +14,10 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'type')->dropDownList(array(1=>'Rol',2=>'İzin'), ['prompt' => 'Nesne Tipi'])  ?>
+    <?= $form->field($model, 'type')->hiddenInput(['value' => 1])->label(false) ?>
 
     <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>
 
-  <!--  <?= $form->field($model, 'rule_name')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'data')->textInput() ?>
-
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
--->
     <div class="form-group">
         <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success']) ?>
     </div>

@@ -6,7 +6,9 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Authitemchild */
 
-$this->params['breadcrumbs'][] = ['label' => 'Rol Grupları', 'url' => ['index']];
+$this->title = 'Rol Grubu Ekle';
+$this->params['breadcrumbs'][] = ['label' => 'Rol İlişkileri', 'url' => ['index']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="authitemchild-create">
 

@@ -49,7 +49,6 @@ use yii\helpers\Url;
                         ]
                     ],
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'desktop','label' => 'Envanter/Zimmet Yönetimi', 'url' => ['/envcihazliste/index']],
-                    ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'cogs','label' => 'Bakım Yönetimi', 'url' => ['/bgyscihazbakim/index']],
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'file','label' => 'Listeler',
                         'items' => [
                             ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'file','label' => 'İş Sürekliliği ve Kritik Süreçler', 'url' => ['/bgyskritiksurecler/index']],
@@ -68,9 +67,9 @@ use yii\helpers\Url;
                         'items' => [
                             ['label' => 'Risk', 'url' => ['/bgysrisk/index']],
                             ['visible' => Yii::$app->user->can('BGYS_Ekip_Lideri'),'label' => 'Risk Kabul', 'url' => ['/bgysrisk/riskkabuller']],
+                            ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'eyedropper','label' => 'Düzeltici Faaliyetler', 'url' => ['/bgysdiftalep/index'],
                         ]
                     ],
-                    ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'eyedropper','label' => 'Düzeltici Faaliyetler', 'url' => ['/bgysdiftalep/index'],
                     ],
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'anchor','label' => 'Olay Yönetimi',
                         'items' => [
@@ -79,30 +78,32 @@ use yii\helpers\Url;
                     ],                     
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'commenting-o','label' => 'Eğitim Yönetimi',
                         'items' => [
-                            ['label' => 'Farkındalık Eğitimi Sonuçları', 'url' => ['/bgysfarkindalikquiz/index']],
                             ['label' => 'Farkındalık Eğitimi ', 'url' => ['/bgysfarkindalikquiz/egitim']],
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Farkındalık Eğitimi Sonuçları', 'url' => ['/bgysfarkindalikquiz/index']],
                         ]
-                    ],                   
+                    ],     
+                    ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'cogs','label' => 'Bakım Yönetimi', 'url' => ['/bgyscihazbakim/index']],              
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'paper-plane-o','label' => 'Hatırlatmalar',
                         'items' => [
                             ['label' => 'Mail Hatırlatma', 'url' => ['/mailkapat/index']],
+                            ['label' => 'Sunucu Hatırlatma', 'url' => ['/yenihostbildir/index']],
                         ]
                     ],            
                    // ['visible' => Yii::$app->user->can('BGYS_Yonetim_Temsilcisi'),'icon' => 'male','label' => 'Kullanıcılar','url' => ['/userdb/index']   ],
-                    ['visible' => Yii::$app->user->can('BGYS_Yonetim_Temsilcisi'),'icon' => 'puzzle-piece','label' => 'Yetkilendirme',
+                    ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'icon' => 'puzzle-piece','label' => 'Yetkilendirme',
                         'items' => [
-                            ['visible' => Yii::$app->user->can('BGYS_Yonetim_Temsilcisi'),'label' => 'Kullanıcı Bilgileri', 'url' => ['/userbilgi/index']],
-                            ['visible' => Yii::$app->user->can('BGYS_Yonetim_Temsilcisi'),'label' => 'Rol Atama', 'url' => ['/authassignment/index']],
-                            ['visible' => Yii::$app->user->can('super_admin'),'label' => 'Roller', 'url' => ['/authitem/index']],
-                            ['visible' => Yii::$app->user->can('super_admin'),'label' => 'Rol İlişkileri', 'url' => ['/authitemchild/index']],
-                            ['visible' => Yii::$app->user->can('super_admin'),'label' => 'Kurallar', 'url' => ['/authrule/index']]
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Kullanıcı Bilgileri', 'url' => ['/userbilgi/index']],
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Rol Atama', 'url' => ['/authassignment/index']],
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Roller', 'url' => ['/authitem/index']],
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Rol İlişkileri', 'url' => ['/authitemchild/index']],
+                            ['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Hareket Kayıtları', 'url' => ['/bgyslogs/index']]
                         ]
                     ],            
                    // ['visible' => Yii::$app->user->can('BGYS_Yonetim_Temsilcisi'),'icon' => 'male','label' => 'Hareket Kayıtları','url' => ['/bgyslogs/index']   ],
                     
-                    //['visible' => Yii::$app->user->can('super_admin'),'label' => 'Gii', 'icon' => 'puzzle-piece', 'url' => ['/gii']],
-                    //['visible' => Yii::$app->user->can('super_admin'),'label' => 'Debug', 'icon' => 'puzzle-piece', 'url' => ['/debug']],
-                    /*['visible' => Yii::$app->user->can('super_admin'),'label' => 'Test Menus','icon' => 'puzzle-piece','url' => '#',
+                    //['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Gii', 'icon' => 'puzzle-piece', 'url' => ['/gii']],
+                    //['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Debug', 'icon' => 'puzzle-piece', 'url' => ['/debug']],
+                    /*['visible' => Yii::$app->user->can('BGYS_Super_Admin'),'label' => 'Test Menus','icon' => 'puzzle-piece','url' => '#',
                         'items' => [
                             ['label' => 'asdsadadasd', 'icon' => 'file-code-o', 'url' => ['/gii'],],
                             ['label' => 'Debug', 'icon' => 'dashboard', 'url' => ['/debug'],],

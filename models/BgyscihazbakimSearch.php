@@ -18,7 +18,7 @@ class BgyscihazbakimSearch extends Bgyscihazbakim
     {
         return [
             [['id', 'cihazid', 'sorumlu'], 'integer'],
-            [['periyod', 'bakimformlari', 'sozlesme', 'kayittarihi', 'guncellemetarihi'], 'safe'],
+            [['periyod', 'bakimformlari', 'sozlesme', 'kayittarihi', 'guncellemetarihi', 'bakimtarihi'], 'safe'],
         ];
     }
 
@@ -50,6 +50,7 @@ class BgyscihazbakimSearch extends Bgyscihazbakim
                 'pageSize' => 30,
             ],
         ]);
+        
 
         $this->load($params);
 
@@ -60,6 +61,12 @@ class BgyscihazbakimSearch extends Bgyscihazbakim
         }
 
         // grid filtering conditions
+        $bakimTarihi = $this->bakimtarihi;
+        if ($bakimTarihi && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $bakimTarihi)) {
+            $tarihParcalari = explode('/', $bakimTarihi);
+            $bakimTarihi = $tarihParcalari[2].'-'.$tarihParcalari[1].'-'.$tarihParcalari[0];
+        }
+
         $query->andFilterWhere([
             'id' => $this->id,
             'cihazid' => $this->cihazid,
@@ -69,6 +76,7 @@ class BgyscihazbakimSearch extends Bgyscihazbakim
         ]);
 
         $query->andFilterWhere(['like', 'periyod', $this->periyod])
+            ->andFilterWhere(['like', 'bakimtarihi', $bakimTarihi])
             ->andFilterWhere(['like', 'bakimformlari', $this->bakimformlari])
             ->andFilterWhere(['like', 'sozlesme', $this->sozlesme]);
 

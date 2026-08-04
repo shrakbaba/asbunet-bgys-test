@@ -75,13 +75,12 @@ AppAsset::register($this);
                             ]
                         ];  
                     }
-                    if (Yii::$app->user->can('super_admin')) {
+                    if (Yii::$app->user->can('BGYS_Super_Admin')) {
 
                         $menuItems[] = ['label' => 'RBAC','items' => [
                             ['label' => 'Nesneler', 'url' => ['/authitem/index']],
                             ['label' => 'Nesne Gruplandırma', 'url' => ['/authitemchild/index']],
-                            ['label' => 'Rol Atama', 'url' => ['/authassignment/index']],
-                            ['label' => 'Kurallar', 'url' => ['/authrule/index']]
+                            ['label' => 'Rol Atama', 'url' => ['/authassignment/index']]
                             ]
                         ];
                         $menuItems[] = ['label' => 'Kullanıcılar','url' => ['/userdb/index']   ];

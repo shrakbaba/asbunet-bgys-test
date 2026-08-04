@@ -5,8 +5,8 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Authitem */
 
-$this->title = 'Rbac Nesnesi Güncelle: ' . $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Rbac Nesneleri', 'url' => ['index']];
+$this->title = 'Rol Güncelle';
+$this->params['breadcrumbs'][] = ['label' => 'Roller', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->name]];
 $this->params['breadcrumbs'][] = 'Güncelle';
 ?>

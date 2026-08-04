@@ -12,14 +12,15 @@ use app\models\Userbilgi;
  */
 class UserbilgiSearch extends Userbilgi
 {
+    public $username;
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'kisi_id'], 'integer'],
-            [['ad', 'soyad', 'email', 'tc', 'telefon', 'adres', 'dogumyili'], 'safe'],
+            [['id', 'kisi_id', 'username', 'ad', 'soyad', 'email', 'birim', 'tc', 'telefon', 'adres', 'dogumyili'], 'safe'],
         ];
     }
 
@@ -41,7 +42,7 @@ class UserbilgiSearch extends Userbilgi
      */
     public function search($params)
     {
-        $query = Userbilgi::find();
+        $query = Userbilgi::find()->alias('ub')->joinWith(['kisi k']);
 
         // add conditions that should always apply here
 
@@ -58,18 +59,17 @@ class UserbilgiSearch extends Userbilgi
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'kisi_id' => $this->kisi_id,
-        ]);
-
-        $query->andFilterWhere(['like', 'ad', $this->ad])
-            ->andFilterWhere(['like', 'soyad', $this->soyad])
-            ->andFilterWhere(['like', 'email', $this->email])
-            ->andFilterWhere(['like', 'tc', $this->tc])
-            ->andFilterWhere(['like', 'telefon', $this->telefon])
-            ->andFilterWhere(['like', 'adres', $this->adres])
-            ->andFilterWhere(['like', 'dogumyili', $this->dogumyili]);
+        $query->andFilterWhere(['like', 'ub.id', $this->id])
+            ->andFilterWhere(['like', 'ub.kisi_id', $this->kisi_id])
+            ->andFilterWhere(['like', 'k.username', $this->username])
+            ->andFilterWhere(['like', 'ub.ad', $this->ad])
+            ->andFilterWhere(['like', 'ub.soyad', $this->soyad])
+            ->andFilterWhere(['like', 'ub.email', $this->email])
+            ->andFilterWhere(['like', 'ub.birim', $this->birim])
+            ->andFilterWhere(['like', 'ub.tc', $this->tc])
+            ->andFilterWhere(['like', 'ub.telefon', $this->telefon])
+            ->andFilterWhere(['like', 'ub.adres', $this->adres])
+            ->andFilterWhere(['like', 'ub.dogumyili', $this->dogumyili]);
 
         return $dataProvider;
     }

@@ -8,6 +8,7 @@ use app\models\BgysizlemeolcmeSearch;
 use app\models\Bgysizlemesonucu;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\helpers\bgys;
 
@@ -19,6 +20,12 @@ class BgysizlemeolcmeController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -77,16 +84,20 @@ class BgysizlemeolcmeController extends Controller
                         return $this->redirect(['index']); 
                     }
                 }
-                return $this->renderAjax('kayitgir', [
+                return $this->render('kayitgir', [
                     'model' => $model,
                 ]);
             }else{
                 Yii::$app->session->setFlash('error','Yeterli sayıda kayıt girilmiş.');
-                return $this->redirect(['index']);
+                Yii::$app->user->returnUrl = Yii::$app->request->referrer;
+                return $this->redirect(Yii::$app->user->returnUrl);
+                //return $this->redirect(['index']);
             }
         }else{
                 Yii::$app->session->setFlash('error','Yetkisiz erişim');
-                return $this->redirect(['index']);
+                Yii::$app->user->returnUrl = Yii::$app->request->referrer;
+                return $this->redirect(Yii::$app->user->returnUrl);
+                //return $this->redirect(['index']);
         }
     }
 

@@ -7,8 +7,8 @@ use app\models\Bgysfarkindalikquiz;
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgysfarkindalikquiz */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Farkındalık Eğitim Sınavları', 'url' => ['index']];
+$this->title = 'Farkındalık Eğitim Sonucu';
+$this->params['breadcrumbs'][] = ['label' => 'Farkındalık Eğitim Sonuçları', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
@@ -31,7 +31,14 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             //'id',
-            'cevaplayan',
+            [
+                'label' => 'Ad Soyad',
+                'value' => $model->cevaplayanAdSoyad,
+            ],
+            [
+                'label' => 'Eğitim',
+                'value' => $model->egitim ? $model->egitim->baslik : '(Veri Yok)',
+            ],
             'ip',
             //'cevaplamatarihi',
             [
@@ -44,58 +51,33 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 <div  class="col-md-12">
     <div class="col-md-4 h4">Soru</div>
-    <div class="col-md-4 h4">Kullanıcı Cevabı</div>
-    <div class="col-md-4 h4" style="color:green">Doğru Cevap</div>
+    <div class="col-md-8 h4">Kullanıcı Cevabı</div>
 </div>
 
-<?php //echo $model->cevaplar; 
-$cevaplar=json_decode($model->cevaplar);
-foreach ($cevaplar as $key => $value) {
-    $soru = @(new Bgysfarkindalikquiz())->attributeLabels()[$key]; // soru1 in sorusu
-    $dogru=@((new Bgysfarkindalikquiz())->dogrular)[$key];  //soru1 in doğru cevap indexi
-
-   // $dogru=((new Bgysfarkindalikquiz())->($key."data"))[$key];  //soru1 in doğru cevap indexi
-
-    if (is_array($value)) {
-        echo "<br>";
-        $deger=null;
-        foreach ($value as $key2 => $value2) {
-            $deger=$value2." ; ".$deger;
-        }
+<?php
+$cevaplar=json_decode($model->cevaplar, true);
+foreach ((array)$cevaplar as $key => $value) {
+    $soruIndex = ((int)str_replace('soru', '', $key)) - 1;
+    $quizSoru = $model->quizSorulari[$soruIndex] ?? null;
+    if ($quizSoru === null) {
+        continue;
     }
-    else{
-        $deger=$value;  //soru1 kullanıcı cevabı
-    }
-    $var=$key."data";
-    $cevapsikki=@((new Bgysfarkindalikquiz())->$var)[$deger];  //soru1 in doğru cevap indexi
-
-    if (is_array($dogru)) {
-        echo "<br>";
-        $deger2=null;
-        foreach ($dogru as $key3 => $value3) {
-            $deger2=$value3." ; ".$deger2;
-        }
-    }
-    else{
-         $deger2=$dogru;  //soru1 doğru cevabı
-    }
-    $var=$key."data";
-    $dogrusikki=@((new Bgysfarkindalikquiz())->$var)[$deger2];  //soru1 in doğru cevap indexi
-
-    //echo "<pre>";var_dump($cevapsikki);exit;
+    $soru = $quizSoru['soru'];
+    $secenekler = $quizSoru['secenekler'];
+    $cevapsikki = $secenekler[$value] ?? '(Cevap Yok)';
     ?>
     <div  class="col-md-12">
         <div class="col-md-4"><?= $soru ?></div>
-        <?php if($deger==$deger2) {?>
-            <div class="col-md-4" style="color: green;"><?= ($cevapsikki) ?></div>
-        <?php }else{ ?>
-            <div class="col-md-4"  style="color: red;"><?= ($cevapsikki) ?></div>
-        <?php } ?>
-    <div class="col-md-4" style="color:green"><?= ($dogrusikki) ?></div>
+        <div class="col-md-8"><?= ($cevapsikki) ?></div>
     </div> <?php
 
 }
 
 ?> 
+
+    <div class="clearfix"></div>
+    <div class="form-group" style="margin-top:15px;">
+        <?= Html::button('Tamam', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) ?>
+    </div>
 
 </div>

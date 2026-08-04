@@ -14,46 +14,47 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=5.4.0",
+        "php": ">= 7.0",
         "yiisoft/yii2": "~2.0.14",
         "yiisoft/yii2-bootstrap": "~2.0.0",
         "2amigos/yii2-date-picker-widget": "~1.0",
         "yii2tech/crontab": "^1.0",
         "edvlerblog/yii2-adldap-module": "^4.0.0",
         "miloschuman/yii2-highcharts-widget": "*",
-        "kartik-v/yii2-widget-fileinput": "*",
         "philippfrenzel/yii2fullcalendar": "*",
+        "kartik-v/yii2-widget-fileinput": "*",
         "kartik-v/yii2-widget-rating": "*",
         "kartik-v/yii2-detail-view": "dev-master",
-        "kartik-v/yii2-grid": "dev-master",
+        "kartik-v/yii2-grid": "*",
         "kartik-v/yii2-editable": "dev-master",
         "kartik-v/yii2-datecontrol": "dev-master",
         "kartik-v/yii2-widgets": "dev-master",
-        "kartik-v/yii2-dynagrid": "@dev",        
+        "kartik-v/yii2-dynagrid": "*",  
+        "kartik-v/yii2-checkbox-x": "dev-master",
+        "kartik-v/yii2-export": "@dev",
+        "kartik-v/yii2-tabs-x": "dev-master",    
+        "kartik-v/yii2-widget-select2": "dev-master", 
         "yiisoft/yii2-swiftmailer": "~2.1.0",
         "almasaeed2010/adminlte":"~2.4",
         "dmstr/yii2-adminlte-asset": "2.*",
         "wbraganca/yii2-videojs-widget": "~1.0",
-        "kartik-v/yii2-widget-select2": "dev-master",
         "cebe/markdown": "~1.1.0",
-        "kartik-v/yii2-checkbox-x": "dev-master",
-        "kartik-v/yii2-export": "@dev",
-        "kartik-v/yii2-tabs-x": "dev-master",
-        "himiklab/yii2-recaptcha-widget" : "*"
+        "himiklab/yii2-recaptcha-widget" : "*",
+        "unclead/yii2-multiple-input": "~2.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",
         "yiisoft/yii2-gii": "~2.0.0",
-        "yiisoft/yii2-faker": "~2.0.0",
-
-        "codeception/base": "^2.2.3",
-        "codeception/verify": "~0.3.1",
-        "codeception/specify": "~0.4.3"
+        "yiisoft/yii2-faker": "~2.0.0"
     },
     "config": {
         "process-timeout": 1800,
         "fxp-asset": {
             "enabled": false
+        },
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "kylekatarnls/update-helper": true
         }
     },
     "scripts": {

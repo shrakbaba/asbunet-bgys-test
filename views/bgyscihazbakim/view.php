@@ -7,25 +7,14 @@ use app\models\Userbilgi;
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgyscihazbakim */
 
-$this->title = $model->id;
+$this->title = 'Bakım Kaydı: '.$model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Bakım Kayıtları', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="bgyscihazbakim-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Güncelle', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Sil', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Bu veriyi silmek istediğinizden emin misiniz?',
-                'method' => 'post',
-            ],
-            ]) ?>
-        </p>
+    <h2><?= Html::encode($this->title) ?></h2>
 
         <?= DetailView::widget([
             'model' => $model,
@@ -62,19 +51,28 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             ]) ?>
             <?php if ($model->sozlesme ) {      ?>
-            <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("bakim")."/".$model->sozlesme ?>')" style="margin: 10px;color:white">Sözleşme</span>
+            <p>
+                <strong>Cihaz Sözleşmesi:</strong>
+                <?= Html::a($model->sozlesme, ['/uploads/bgys/'.md5("bakim").'/'.$model->sozlesme], ['target'=>'_blank']) ?>
+            </p>
             <?php } ?>
 
             <?php 
             if ($model->bakimformlari and $model->bakimformlari!="null" ) {      
                 $model->bakimformlari=json_decode($model->bakimformlari);
                 
+                echo '<p><strong>Bakım Formları:</strong></p><ul>';
                 foreach (@$model->bakimformlari as $key => $value) { ?>
-                <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("bakim")."/".$value ?>')" style="margin: 10px;color:white">Bakım<?= $key+1?> </span>
+                <li><?= Html::a($value, ['/uploads/bgys/'.md5("bakim").'/'.$value], ['target'=>'_blank']) ?></li>
 
                 <?php        }
+                echo '</ul>';
                 ?>
 
                 <?php } ?>
+
+            <p>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tamam</button>
+            </p>
 
             </div>

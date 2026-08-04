@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
+use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -27,7 +28,7 @@ class NessusController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['sessionac','klasorac','scanekle','uuidal','folders','listscan','scandevamet'],
-                        'roles' => [],
+                        'roles' => ['BGYS_Super_Admin'],
                     ],
                     [
                       'allow' => false,
@@ -42,6 +43,32 @@ class NessusController extends Controller
         ];
     }
 
+    private function nessusUrl($path)
+    {
+        if (empty(Yii::$app->params['nessusBaseUrl'])) {
+            throw new BadRequestHttpException('Nessus bağlantı bilgisi tanımlı değil.');
+        }
+        return rtrim(Yii::$app->params['nessusBaseUrl'] ?? '', '/') . $path;
+    }
+
+    private function nessusApiHeader()
+    {
+        if (empty(Yii::$app->params['nessusAccessKey']) || empty(Yii::$app->params['nessusSecretKey'])) {
+            throw new BadRequestHttpException('Nessus API anahtarı tanımlı değil.');
+        }
+        return 'x-apikeys:accessKey=' . (Yii::$app->params['nessusAccessKey'] ?? '') . ';secretKey=' . (Yii::$app->params['nessusSecretKey'] ?? '');
+    }
+
+    private function nessusSslVerifyHost()
+    {
+        return !empty(Yii::$app->params['nessusVerifySsl']) ? 2 : 0;
+    }
+
+    private function nessusSslVerifyPeer()
+    {
+        return !empty(Yii::$app->params['nessusVerifySsl']);
+    }
+
     public function actionSessionac()
     {
         $curl = curl_init();
@@ -49,7 +76,7 @@ class NessusController extends Controller
 		curl_setopt_array($curl, array(
 		  //CURLOPT_URL => "https://www.tenable.com/downloads/api/v2/pages",
 
-  		  CURLOPT_URL => "https://10.0.110.30:8834/session",
+  		  CURLOPT_URL => $this->nessusUrl('/session'),
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
@@ -59,11 +86,14 @@ class NessusController extends Controller
 		  CURLOPT_HTTPHEADER => array(
 		    "accept: application/json",
     		"content-type: application/json",
-		    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+		    $this->nessusApiHeader(),
 		  ),
-		  CURLOPT_SSL_VERIFYHOST => 0,
-		  CURLOPT_SSL_VERIFYPEER => 0,
-  		  CURLOPT_POSTFIELDS => "{\"username\":\"alren\",\"password\":\"060117Ze.\"}",
+		  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+		  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
+  		  CURLOPT_POSTFIELDS => json_encode([
+              'username' => Yii::$app->params['nessusUsername'] ?? '',
+              'password' => Yii::$app->params['nessusPassword'] ?? '',
+          ]),
 		));
 
 		$response = curl_exec($curl);
@@ -85,7 +115,7 @@ class NessusController extends Controller
         $curl = curl_init();
 
 		curl_setopt_array($curl, array(
-  		  CURLOPT_URL => "https://10.0.110.30:8834/folders",
+  		  CURLOPT_URL => $this->nessusUrl('/folders'),
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
@@ -93,13 +123,13 @@ class NessusController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => "POST",
 		  CURLOPT_HTTPHEADER => array(
-		    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+		    $this->nessusApiHeader(),
 		    "accept: application/json",
     		"content-type: application/json",
 		  ),
   		  CURLOPT_POSTFIELDS => "{\"name\":\"qwe\"}",
-		  CURLOPT_SSL_VERIFYHOST => 0,
-		  CURLOPT_SSL_VERIFYPEER => 0,
+		  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+		  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 		));
 
 		$response = curl_exec($curl);
@@ -119,7 +149,7 @@ class NessusController extends Controller
     		$curl = curl_init();
 
 			curl_setopt_array($curl, array(
-			  CURLOPT_URL => "https://10.0.110.30:8834/editor/scan/templates",
+			  CURLOPT_URL => $this->nessusUrl('/editor/scan/templates'),
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => "",
 			  CURLOPT_MAXREDIRS => 10,
@@ -127,11 +157,11 @@ class NessusController extends Controller
 			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			  CURLOPT_CUSTOMREQUEST => "GET",
 			  CURLOPT_HTTPHEADER => array(
-			    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+			    $this->nessusApiHeader(),
 			    "accept: application/json"
 			  ),
-			  CURLOPT_SSL_VERIFYHOST => 0,
-			  CURLOPT_SSL_VERIFYPEER => 0,
+			  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+			  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 			));
 
 			$response = curl_exec($curl);
@@ -155,7 +185,7 @@ class NessusController extends Controller
 	    $curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  	CURLOPT_URL => "https://10.0.110.30:8834/folders",
+		  	CURLOPT_URL => $this->nessusUrl('/folders'),
 		  	CURLOPT_RETURNTRANSFER => true,
 		  	CURLOPT_ENCODING => "",
 		  	CURLOPT_MAXREDIRS => 10,
@@ -163,11 +193,11 @@ class NessusController extends Controller
 		  	CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  	CURLOPT_CUSTOMREQUEST => "GET",
 			CURLOPT_HTTPHEADER => array(
-			    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+			    $this->nessusApiHeader(),
 			    "accept: application/json"
 			  ),
-			CURLOPT_SSL_VERIFYHOST => 0,
-			CURLOPT_SSL_VERIFYPEER => 0,
+			CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+			CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 		));
 
 		$response = curl_exec($curl);
@@ -188,7 +218,7 @@ class NessusController extends Controller
         $curl = curl_init();
 
 		curl_setopt_array($curl, array(
-  		  CURLOPT_URL => "https://10.0.110.30:8834/scans",
+  		  CURLOPT_URL => $this->nessusUrl('/scans'),
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
@@ -197,12 +227,12 @@ class NessusController extends Controller
 		  CURLOPT_CUSTOMREQUEST => "POST",
   		  CURLOPT_POSTFIELDS => "{\"uuid\":\"731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65\",\"settings\":{\"name\":\"denemescan\",\"enabled\":false,\"text_targets\":\"10.0.110.29\"}}",
   		  CURLOPT_HTTPHEADER => array(
-		    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+		    $this->nessusApiHeader(),
 		    "accept: application/json",
 		    "content-type: application/json"
 		  ),
-		  CURLOPT_SSL_VERIFYHOST => 0,
-		  CURLOPT_SSL_VERIFYPEER => 0,
+		  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+		  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 		));
 
 		$response = curl_exec($curl);
@@ -222,7 +252,7 @@ class NessusController extends Controller
         $curl = curl_init();
 
 		curl_setopt_array($curl, array(
-  		  CURLOPT_URL => "https://10.0.110.30:8834/scans?folder_id=3",
+  		  CURLOPT_URL => $this->nessusUrl('/scans?folder_id=3'),
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
@@ -230,11 +260,11 @@ class NessusController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => "GET",
   		  CURLOPT_HTTPHEADER => array(
-		    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+		    $this->nessusApiHeader(),
 		    "accept: application/json",
 		  ),
-		  CURLOPT_SSL_VERIFYHOST => 0,
-		  CURLOPT_SSL_VERIFYPEER => 0,
+		  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+		  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 		));
 
 		$response = curl_exec($curl);
@@ -255,7 +285,7 @@ class NessusController extends Controller
         $curl = curl_init();
 
 		curl_setopt_array($curl, array(
-  		  CURLOPT_URL => "https://10.0.110.30:8834/scans/10/launch",
+  		  CURLOPT_URL => $this->nessusUrl('/scans/10/launch'),
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
@@ -263,12 +293,12 @@ class NessusController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => "POST",
   		  CURLOPT_HTTPHEADER => array(
-		    "x-apikeys:accessKey=aa56bafb5d904ca6265a03fc8c4ca3d15a602fbbe6132c6eb92cbcaa5260e36a;secretKey=6da611d83f471288c08c9b962fbe29b5b42378f73da01bde30a8ff15621eebba",
+		    $this->nessusApiHeader(),
 		    "accept: application/json",
     		"content-type: application/json"
 		  ),
-		  CURLOPT_SSL_VERIFYHOST => 0,
-		  CURLOPT_SSL_VERIFYPEER => 0,
+		  CURLOPT_SSL_VERIFYHOST => $this->nessusSslVerifyHost(),
+		  CURLOPT_SSL_VERIFYPEER => $this->nessusSslVerifyPeer(),
 		));
 
 		$response = curl_exec($curl);

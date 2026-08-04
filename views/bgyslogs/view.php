@@ -6,14 +6,14 @@ use yii\widgets\DetailView;
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgyslogs */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Bgyslogs', 'url' => ['index']];
+$this->title = 'Hareket Kaydı';
+$this->params['breadcrumbs'][] = ['label' => 'Hareket Kayıtları', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="bgyslogs-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <h3><?= Html::encode($this->title) ?></h3>
 
     <?= DetailView::widget([
         'model' => $model,
@@ -21,11 +21,21 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'controller',
             'action',
-            'userid',
-            'date',
+            [
+                'attribute' => 'userid',
+                'value' => @$model->logyapan->username,
+            ],
+            [
+                'attribute'=>'date',
+                'format' => ['date', 'php:d/m/Y H:i:s'],
+            ],
             'not',
             'islem',
         ],
     ]) ?>
+
+    <div class="form-group">
+        <?= Html::button('Tamam', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) ?>
+    </div>
 
 </div>

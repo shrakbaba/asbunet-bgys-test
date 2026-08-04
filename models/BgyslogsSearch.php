@@ -46,6 +46,7 @@ class BgyslogsSearch extends Bgyslogs
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => ['defaultOrder' => ['date' => SORT_DESC]],
             'pagination' => [
                 'pageSize' => 30,
             ],
