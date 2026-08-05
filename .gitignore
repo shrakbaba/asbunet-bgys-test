@@ -1,38 +1,49 @@
-# phpstorm project files
-.idea
+# Environment and secrets
+.env
+.env.*
+!.env.example
+config/db.php
+common/config/main-local.php
+frontend/config/main-local.php
+backend/config/main-local.php
+console/config/main-local.php
 
-# netbeans project files
-nbproject
+# Secrets and certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+auth.json
+credentials.json
+secrets/
 
-# zend studio for eclipse project files
-.buildpath
-.project
-.settings
+# Database
+*.sql
+*.dump
+*.bak
+backups/
 
-# windows thumbnail cache
-Thumbs.db
+# Uploaded institutional files
+uploads/
+runtime/uploads/
+storage/private/
+web/uploads/
 
-# composer vendor dir
-/vendor
+# Runtime and logs
+runtime/
+logs/
+*.log
 
-# composer itself is not needed
-composer.phar
+# Dependencies
+vendor/
+node_modules/
 
-# Mac DS_Store Files
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS files
 .DS_Store
-
-# phpunit itself is not needed
-phpunit.phar
-# local phpunit config
-/phpunit.xml
-
-tests/_output/*
-tests/_support/_generated
-
-#vagrant folder
-/.vagrant
-
-/config/db.php
-/config/db2.php
-/config/web.php
-/config/params_local.php
+Thumbs.db
