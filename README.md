@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <p align="center">
     <a href="https://github.com/yiisoft" target="_blank">
         <img src="https://avatars0.githubusercontent.com/u/993323" height="100px">
@@ -236,3 +237,34 @@ You can see code coverage output under the `tests/_output` directory.
 # asbunet-bgys-test
 bgys test
 >>>>>>> 6c2938f67219d945a5749aaf7790c5d4eb4357f4
+=======
+# BGYS Test
+
+Bu depo, **BGYS** projesinin test amaçlı GitHub sürümüdür.  
+Yerel ortamdan (XAMPP) taşınan dosyaları içerir.
+
+## Proje Durumu
+Geliştirme/Test aşamasında.
+
+## Kurulum (XAMPP)
+1. Depoyu klonlayın:
+   ```bash
+   git clone https://github.com/shrakbaba/asbunet-bgys-test.git
+   ```
+2. Projeyi `htdocs` altına alın:
+   - Windows örnek yol: `C:\xampp\htdocs\bgys`
+3. XAMPP üzerinden **Apache** (ve gerekiyorsa **MySQL**) başlatın.
+4. Tarayıcıdan projeyi açın:
+   - `http://localhost/bgys`
+
+## Git Akışı (ilk push sonrası)
+```bash
+git add .
+git commit -m "Update project files"
+git push origin main
+```
+
+## Notlar
+- `.env`, yedekler, geçici dosyalar ve büyük medya dosyaları repoya eklenmemelidir.
+- Gerekirse `.gitignore` dosyası projeye göre genişletilmelidir.
+>>>>>>> 9441e8b4477535db91649c4552b2e070900b4b75
