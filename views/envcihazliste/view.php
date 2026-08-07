@@ -80,11 +80,23 @@ echo DetailView::widget([
                 'valueColOptions' => ['style' => 'height: 85%'],
             ]  ,
             [
-            'attribute'=>'zimmet',
-            'format'=>'raw',
+                'attribute'=>'zimmet',
+                'format'=>'raw',
             //'value'=> @$model->zimmet0->ad." ".@$model->zimmet0->soyad
             'value'=>  Yii::$app->params['giristipi']==1 ? @Userbilgi::findOne(['kisi_id'=>$model->zimmet])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$model->zimmet])->soyad.' / '.@$model->zimmet0->username : @$model->zimmet0->ad." ".@$model->zimmet0->soyad." ".@$model->zimmet0->username 
-            ],    
+            ],
+            [
+                'attribute' => 'dosya',
+                'label' => 'Alım Belgesi',
+                'format' => 'raw',
+                'value' => $model->dosya
+                    ? Html::a('Belgeyi İndir', ['/envcihazliste/download', 'id' => $model->id], [
+                        'class' => 'btn btn-info btn-sm',
+                        'target' => '_blank',
+                        'data-pjax' => '0',
+                    ])
+                    : '<span class="text-muted">Belge yüklenmemiş</span>',
+            ],
     ]
     
 ]); ?>
@@ -115,12 +127,4 @@ echo DetailView::widget([
         </tbody>
     </table>
 </div>
-<?php if ($model->dosya) { ?>
-    <?= Html::a('Belgeyi İndir', ['/envcihazliste/download', 'id' => $model->id], [
-        'class' => 'btn btn-info col-md-2',
-        'style' => 'margin: 10px;color:white',
-        'target' => '_blank',
-    ]) ?>
-<?php } ?>
-
 </div>
