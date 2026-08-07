@@ -132,6 +132,10 @@ class SiteController extends Controller
     public function actionIndex()
     {
         if (!Yii::$app->user->isGuest) {
+            if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
+                return $this->redirect(['/site/dashboard']);
+            }
+
             return $this->render('index');
         }
         $model = new LoginForm();
@@ -160,7 +164,11 @@ class SiteController extends Controller
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
-           return $this->goHome();
+            if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
+                return $this->redirect(['/site/dashboard']);
+            }
+
+            return $this->goHome();
         }
         $model = new LoginForm();
 
