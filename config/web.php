@@ -84,7 +84,9 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
-            'rules' => [],
+            'rules' => [
+                'dashboard' => 'site/dashboard',
+            ],
         ],
         'assetManager' => [
             'bundles' => [
