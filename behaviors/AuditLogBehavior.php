@@ -4,16 +4,19 @@ namespace app\behaviors;
 
 use app\models\AuditLog;
 use yii\base\Behavior;
+use yii\base\Event;
 use yii\db\ActiveRecord;
 use yii\db\AfterSaveEvent;
 
 class AuditLogBehavior extends Behavior
 {
     public $excludedAttributes = [];
+    private $oldAttributesOnDelete = [];
 
     public function events()
     {
         return [
+            ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
             ActiveRecord::EVENT_AFTER_INSERT => 'afterInsert',
             ActiveRecord::EVENT_AFTER_UPDATE => 'afterUpdate',
             ActiveRecord::EVENT_AFTER_DELETE => 'afterDelete',
@@ -36,9 +39,15 @@ class AuditLogBehavior extends Behavior
         AuditLog::record($this->owner, 'update', $oldValues, $newValues);
     }
 
-    public function afterDelete()
+    public function beforeDelete()
     {
-        AuditLog::record($this->owner, 'delete', $this->filteredAttributes($this->owner->getOldAttributes()), null);
+        $this->oldAttributesOnDelete = $this->filteredAttributes($this->owner->getOldAttributes());
+    }
+
+    public function afterDelete(Event $event)
+    {
+        AuditLog::record($this->owner, 'delete', $this->oldAttributesOnDelete, null);
+        $this->oldAttributesOnDelete = [];
     }
 
     private function filteredAttributes(array $attributes)

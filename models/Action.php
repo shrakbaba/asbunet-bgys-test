@@ -71,9 +71,14 @@ class Action extends \yii\db\ActiveRecord
     public function validateCloseGuardrails($attribute)
     {
         $isClosing = (int) $this->$attribute === self::STATUS_CLOSED
-            && ($this->getIsNewRecord() || (int) $this->getOldAttribute($attribute) !== self::STATUS_CLOSED);
+            && ((int) $this->getOldAttribute($attribute) !== self::STATUS_CLOSED);
 
         if (!$isClosing) {
+            return;
+        }
+
+        if ($this->getIsNewRecord()) {
+            $this->addError($attribute, 'Aksiyon kaydı oluşturulmadan kapatılamaz.');
             return;
         }
 

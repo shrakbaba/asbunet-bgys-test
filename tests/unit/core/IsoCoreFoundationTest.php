@@ -74,9 +74,9 @@ class IsoCoreFoundationTest extends \Codeception\Test\Unit
         $action->status = Action::STATUS_CLOSED;
         $this->assertFalse($action->validate(['status']));
 
-        $errors = implode(' ', $action->getErrors('status'));
-        $this->assertStringContainsString('en az bir kanıt', $errors);
-        $this->assertStringContainsString('reviewer ve approver', $errors);
+        $errors = $action->getErrors('status');
+        $this->assertTrue($this->containsText($errors, 'en az bir kanıt'));
+        $this->assertTrue($this->containsText($errors, 'reviewer ve approver'));
 
         $evidence = new Evidence([
             'action_id' => $action->id,
@@ -86,7 +86,7 @@ class IsoCoreFoundationTest extends \Codeception\Test\Unit
 
         $action->status = Action::STATUS_CLOSED;
         $this->assertFalse($action->validate(['status']));
-        $this->assertStringContainsString('reviewer ve approver', implode(' ', $action->getErrors('status')));
+        $this->assertTrue($this->containsText($action->getErrors('status'), 'reviewer ve approver'));
 
         $approval = new ActionApproval([
             'action_id' => $action->id,
@@ -132,5 +132,16 @@ class IsoCoreFoundationTest extends \Codeception\Test\Unit
                 'components' => [],
             ]);
         }
+    }
+
+    private function containsText(array $errors, $needle)
+    {
+        foreach ($errors as $error) {
+            if (mb_strpos($error, $needle) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

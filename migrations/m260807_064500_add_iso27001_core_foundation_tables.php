@@ -31,7 +31,7 @@ class m260807_064500_add_iso27001_core_foundation_tables extends Migration
             'id' => $this->primaryKey(),
             'entity_type' => $this->string(128)->notNull(),
             'entity_id' => $this->integer()->null(),
-            'action' => $this->string(16)->notNull(),
+            'action' => $this->string(32)->notNull(),
             'old_value' => $this->text()->null(),
             'new_value' => $this->text()->null(),
             'changed_by' => $this->integer()->null(),
@@ -114,7 +114,6 @@ class m260807_064500_add_iso27001_core_foundation_tables extends Migration
             'created_at' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP'),
         ]);
 
-        $this->createIndex('idx-action_approvals-action_id', $table, 'action_id');
         $this->createIndex('ux-action_approvals-action_id', $table, 'action_id', true);
         $this->addForeignKey(
             'fk-action_approvals-action_id',
@@ -162,9 +161,11 @@ class m260807_064500_add_iso27001_core_foundation_tables extends Migration
     private function dropAuditLogsTable()
     {
         $table = '{{%audit_logs}}';
-        if ($this->tableExists($table)) {
-            $this->dropTable($table);
+        if (!$this->tableExists($table)) {
+            return;
         }
+
+        $this->dropTable($table);
     }
 
     private function tableExists($table)

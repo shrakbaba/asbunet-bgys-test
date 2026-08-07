@@ -19,7 +19,7 @@ class AuditLog extends \yii\db\ActiveRecord
             [['old_value', 'new_value'], 'string'],
             [['changed_at'], 'safe'],
             [['entity_type'], 'string', 'max' => 128],
-            [['action'], 'string', 'max' => 16],
+            [['action'], 'string', 'max' => 32],
             [['ip'], 'string', 'max' => 45],
             [['user_agent'], 'string', 'max' => 255],
         ];
@@ -34,7 +34,6 @@ class AuditLog extends \yii\db\ActiveRecord
         $audit->old_value = $oldValue !== null ? json_encode($oldValue, JSON_UNESCAPED_UNICODE) : null;
         $audit->new_value = $newValue !== null ? json_encode($newValue, JSON_UNESCAPED_UNICODE) : null;
         $audit->changed_by = self::resolveUserId();
-        $audit->changed_at = gmdate('Y-m-d H:i:s');
         $audit->ip = self::resolveUserIp();
         $audit->user_agent = self::resolveUserAgent();
 
