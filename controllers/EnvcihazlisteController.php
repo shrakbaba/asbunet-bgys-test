@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\components\RecordAccess;
+use app\components\SecureFileStorage;
 use app\models\Envcihazliste;
 use app\models\EnvcihazlisteSearch;
 use app\models\Envcihazzimmet;
@@ -44,7 +45,7 @@ class EnvcihazlisteController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['index','view','dashboard'],
+                        'actions' => ['index','view','dashboard','download'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -240,21 +241,16 @@ class EnvcihazlisteController extends Controller
 
                 $model->file =UploadedFile::getInstance($model,'file');  
                 if ($model->file!=null) {  
-                    $ext = $model->file->extension;
-                    $model->dosya = Yii::$app->security->generateRandomString().".{$ext}";
-                    //$path = Yii::getAlias('@env_dosya') ."/".$model->dosya;
-                    $path = Yii::getAlias('@env_dosya') ."bgys/".md5("cihaz")."/".$model->dosya;
-
-                    if ($model->validate()) {                
-                            
-                        if ($model->save()) {
+                    if ($model->validate()) {
+                        $model->dosya = SecureFileStorage::storePdf($model->file, 'devices');
+                        if ($model->save(false)) {
                             $this->syncAssignmentHistory($model, null);
-                            $model->file->saveAs($path);
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz tanımlandı','cihaz:'.$model->id );
                             //return $this->redirect(['view', 'id' => $model->id]);                            
                             //return $this->redirect(['index']);
                             return $this->redirect(Yii::$app->request->referrer);
                         }else{
+                            SecureFileStorage::delete($model->dosya, 'devices');
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                             return $this->redirect(['index']);
                         }
@@ -281,6 +277,7 @@ class EnvcihazlisteController extends Controller
         $model = $this->findModel($id);
         RecordAccess::assertCanManage($model, ['created_by'], 'env_cihaz_liste');
         $oldZimmet = $model->zimmet;
+        $oldFileName = $model->dosya;
         
         $model->alim_tarihi=imdat::mysqltowebdate($model->alim_tarihi);
         $model->garanti_bitis=imdat::mysqltowebdate($model->garanti_bitis); 
@@ -292,20 +289,16 @@ class EnvcihazlisteController extends Controller
 
                 $model->file =UploadedFile::getInstance($model,'file');  
                 if ($model->file!=null) {  
-                    $ext = $model->file->extension;
-                    $model->dosya = Yii::$app->security->generateRandomString().".{$ext}";
-                    //$path = Yii::getAlias('@env_dosya') ."/".$model->dosya;
-                    $path = Yii::getAlias('@env_dosya') ."bgys/".md5("cihaz")."/".$model->dosya;
-
-                    if ($model->validate()) {                
-                            
-                        if ($model->save()) {
+                    if ($model->validate()) {
+                        $model->dosya = SecureFileStorage::storePdf($model->file, 'devices');
+                        if ($model->save(false)) {
                             $this->syncAssignmentHistory($model, $oldZimmet);
-                            $model->file->saveAs($path);
+                            SecureFileStorage::delete($oldFileName, 'devices', [$this->legacyDeviceDirectory()]);
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz guncellendi','cihaz:'.$model->id );
                             //return $this->redirect(['view', 'id' => $model->id]);
                             return $this->redirect(Yii::$app->request->referrer);
                         }else{
+                            SecureFileStorage::delete($model->dosya, 'devices');
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                             return $this->redirect(['index']);
                         }
@@ -338,14 +331,10 @@ class EnvcihazlisteController extends Controller
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;
-        $yol=Yii::$app->basePath .'/web/uploads/bgys/'.md5("cihaz")."/". $this->findModel($id)->dosya;
         //var_dump($yol);exit;
         try {
             //echo "<pre>";var_dump($this->findModel($id));exit;
-            if ($this->findModel($id)->dosya and file_exists($yol)) {
-                //echo 1;exit;
-                unlink($yol);
-            }
+            SecureFileStorage::delete($model->dosya, 'devices', [$this->legacyDeviceDirectory()]);
             //echo 2;exit;
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz silindi','cihaz:'.$id );
             $this->findModel($id)->delete();
@@ -385,7 +374,7 @@ class EnvcihazlisteController extends Controller
                 ->update('env_cihaz_liste', ['dosya'=>null], 'id='.$i)
                 ->execute();
                 if ($a) {
-                    unlink(Yii::$app->basePath .'/web/uploads/bgys/'.md5("cihaz")."/". $dosya);
+                    SecureFileStorage::delete($dosya, 'devices', [$this->legacyDeviceDirectory()]);
 
                     bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz belgesi silindi','cihaz:'.$i);
                     Yii::$app->session->setFlash('success','Belge Silindi.');
@@ -411,6 +400,25 @@ class EnvcihazlisteController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDownload($id)
+    {
+        $model = $this->findModel($id);
+        if (!$model->dosya) {
+            throw new NotFoundHttpException('Dosya bulunamadı.');
+        }
+
+        $path = SecureFileStorage::find($model->dosya, 'devices', [$this->legacyDeviceDirectory()]);
+        return Yii::$app->response->sendFile($path, 'cihaz-belgesi-' . $model->id . '.pdf', [
+            'inline' => false,
+            'mimeType' => 'application/pdf',
+        ]);
+    }
+
+    private function legacyDeviceDirectory()
+    {
+        return Yii::$app->basePath . '/web/uploads/bgys/' . md5('cihaz');
     }
 
     private function syncAssignmentHistory(Envcihazliste $device, $oldUserId)

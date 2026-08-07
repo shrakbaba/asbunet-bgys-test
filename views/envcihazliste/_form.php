@@ -108,7 +108,7 @@ use kartik\select2\Select2;
                                'pluginOptions'=>
                                     $model->dosya ? [
                                         'initialPreview'=>[
-                                            "/uploads/bgys/".md5("cihaz")."/".$model->dosya,
+                                            \yii\helpers\Url::to(['/envcihazliste/download', 'id' => $model->id]),
                                         ],
                                         'initialPreviewFileType' => 'pdf',
                                         'initialPreviewAsData'=>true,

@@ -115,8 +115,12 @@ echo DetailView::widget([
         </tbody>
     </table>
 </div>
-<?php if ($model->dosya) {      ?>
-                        <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("cihaz")."/".$model->dosya ?>')" style="margin: 10px;color:white">Belge</span>
-                <?php } ?>
+<?php if ($model->dosya) { ?>
+    <?= Html::a('Belgeyi İndir', ['/envcihazliste/download', 'id' => $model->id], [
+        'class' => 'btn btn-info col-md-2',
+        'style' => 'margin: 10px;color:white',
+        'target' => '_blank',
+    ]) ?>
+<?php } ?>
 
 </div>
