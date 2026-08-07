@@ -9,6 +9,8 @@ use app\models\Bgysolasilik;
 use app\models\Bgyssiddettablosu;
 use app\models\Bgysdepartman;
 use app\models\Bgyslokasyon;
+use app\models\Bgysvarlikenvanteri;
+use app\models\Userbilgi;
 use kartik\select2\Select2;
 
 /* @var $this yii\web\View */
@@ -98,12 +100,64 @@ use kartik\select2\Select2;
 
     <?= $form->field($model, 'aciklama')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'varlik_sahibi')->textInput(['maxlength' => true]) ?>
+    <div class="col-lg-4">
+        <?= $form->field($model, 'owner_type')->dropDownList(
+            Bgysvarlikenvanteri::ownerTypeOptions(),
+            ['prompt' => 'Sahip türü seçin']
+        ) ?>
+    </div>
+
+    <div class="col-lg-8" id="asset-owner-unit">
+        <?= $form->field($model, 'owner_unit')->dropDownList(
+            Bgysvarlikenvanteri::unitOptions(),
+            ['prompt' => 'Şube müdürlüğü seçin']
+        ) ?>
+    </div>
+
+    <div class="col-lg-8" id="asset-owner-user">
+        <?= $form->field($model, 'owner_user_id')->widget(Select2::classname(), [
+            'data' => ArrayHelper::map(
+                Userbilgi::find()->orderBy(['ad' => SORT_ASC, 'soyad' => SORT_ASC])->all(),
+                'kisi_id',
+                function ($user) {
+                    $name = trim($user->ad . ' ' . $user->soyad);
+                    return $user->email ? $name . ' / ' . $user->email : $name;
+                }
+            ),
+            'options' => ['placeholder' => 'Kullanıcı seçin'],
+            'pluginOptions' => ['allowClear' => true],
+        ]) ?>
+    </div>
+
+    <?= $form->field($model, 'varlik_sahibi')->textInput([
+        'maxlength' => true,
+        'readonly' => true,
+    ])->hint('Seçilen şube müdürlüğü veya kullanıcıya göre sistem tarafından oluşturulur. Eski kayıtlardaki değer korunur.') ?>
 
     <div class="form-group">
         <?= Html::submitButton('Kaydet', ['class' => 'btn btn-success btn-lg']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
+
+<?php
+$ownerTypeInputId = Html::getInputId($model, 'owner_type');
+$this->registerJs(<<<JS
+(function () {
+    var ownerType = $('#{$ownerTypeInputId}');
+
+    function toggleOwnerFields() {
+        var isUnit = ownerType.val() === 'unit';
+        var isUser = ownerType.val() === 'user';
+        $('#asset-owner-unit').toggle(isUnit);
+        $('#asset-owner-user').toggle(isUser);
+    }
+
+    ownerType.on('change', toggleOwnerFields);
+    toggleOwnerFields();
+}());
+JS
+);
+?>
 
 </div>

@@ -20,6 +20,11 @@ $params = [
     'ldapPort' => (int)(getenv('BGYS_LDAP_PORT') ?: 389),
     'ldapUseSsl' => getenv('BGYS_LDAP_USE_SSL') === '1' ? true : false,
     'ldapUseTls' => getenv('BGYS_LDAP_USE_TLS') === '1' ? true : false,
+    'ldapAccountSuffix' => getenv('BGYS_LDAP_ACCOUNT_SUFFIX') ?: '',
+    'ldapDomainControllers' => array_values(array_filter(array_map('trim', explode(',', getenv('BGYS_LDAP_DOMAIN_CONTROLLERS') ?: '')))),
+    'ldapBaseDn' => getenv('BGYS_LDAP_BASE_DN') ?: '',
+    'ldapAdminUsername' => getenv('BGYS_LDAP_ADMIN_USERNAME') ?: '',
+    'ldapAdminPassword' => getenv('BGYS_LDAP_ADMIN_PASSWORD') ?: '',
 ];
 
 $localParamsFile = __DIR__ . '/params_local.php';

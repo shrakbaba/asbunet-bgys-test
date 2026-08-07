@@ -42,7 +42,7 @@ class SiteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index','login','contact','about','vcenter'],
+                        'actions' => ['index','login','contact','about','vcenter','error','captcha'],
                         'roles' => [],
                     ],
                     [
@@ -145,7 +145,7 @@ class SiteController extends Controller
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi') ) {
                     //echo "yetkivar";exit;
-                    return $this->redirect('dashboard');                
+                    return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }
@@ -171,7 +171,7 @@ class SiteController extends Controller
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
                 //return $this->goBack();
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
-                    return $this->redirect('dashboard');                
+                    return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }

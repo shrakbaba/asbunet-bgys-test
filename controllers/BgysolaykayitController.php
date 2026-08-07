@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysolaykayit;
 use app\models\Bgysolaykayitbelge;
 use app\models\BgysolaykayitSearch;
@@ -115,6 +116,7 @@ class BgysolaykayitController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit');
         $maillistesi = bgys::mailGrubu('olayKaydi');
 
         $model->olaytarihi=$this->mysqlTarihiWebTarihineCevir($model->olaytarihi);
@@ -122,7 +124,6 @@ class BgysolaykayitController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
 
-            $model->userid=Yii::$app->user->identity->id;
             $model->olaytarihi=imdat::tomysqldate($model->olaytarihi);
             $model->mudahaletarihi=imdat::tomysqldate($model->mudahaletarihi);
 
@@ -153,6 +154,9 @@ class BgysolaykayitController extends Controller
 
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;
@@ -192,6 +196,7 @@ class BgysolaykayitController extends Controller
     { 
         $olayId = $i;
         if ($i) {
+            RecordAccess::assertCanManage($this->findModel($i), ['userid'], 'bgys_olay_kayit_belge');
                 //echo "<pre>";var_dump($this->findModel($i)->belge);exit;
             if ($this->findModel($i)->belge) {
 
@@ -278,6 +283,7 @@ class BgysolaykayitController extends Controller
             return $this->redirect(['index']);
         }
 
+        RecordAccess::assertCanManage($belge->olay, ['userid'], 'bgys_olay_kayit_belge');
         $olayId = $belge->olay_id;
         $path = $this->olayBelgeYolu($belge->dosya);
         if (file_exists($path)) {
@@ -325,6 +331,7 @@ class BgysolaykayitController extends Controller
                 return ['success' => false, 'message' => 'Belge bulunamadı.'];
             }
 
+            RecordAccess::assertCanManage($belge->olay, ['userid'], 'bgys_olay_kayit_belge');
             $olayId = $belge->olay_id;
             $eskiYol = $this->olayBelgeYolu($belge->dosya);
             if ($file->saveAs($klasor.$dosya)) {
@@ -343,6 +350,7 @@ class BgysolaykayitController extends Controller
 
         if ($legacyId) {
             $model = $this->findModel($legacyId);
+            RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit_belge');
             $eskiYol = $this->olayBelgeYolu($model->belge);
             if ($file->saveAs($klasor.$dosya)) {
                 if ($model->belge && file_exists($eskiYol)) {

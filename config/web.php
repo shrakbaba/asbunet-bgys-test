@@ -3,6 +3,12 @@
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
+if (empty($params['cookieValidationKey'])) {
+    throw new \RuntimeException('BGYS_COOKIE_VALIDATION_KEY veya yerel cookieValidationKey tanimlanmalidir.');
+}
+
+$secureCookies = (bool)$params['secureCookies'];
+
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
@@ -11,9 +17,19 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm' => '@vendor/npm-asset',
     ],
+    'modules' => [
+        'gridview' => [
+            'class' => 'kartik\grid\Module',
+        ],
+    ],
     'components' => [
         'request' => [
-            'cookieValidationKey' => 'bgys-temp-key-change-this',
+            'cookieValidationKey' => $params['cookieValidationKey'],
+            'csrfCookie' => [
+                'httpOnly' => true,
+                'secure' => $secureCookies,
+                'sameSite' => yii\web\Cookie::SAME_SITE_LAX,
+            ],
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -23,6 +39,25 @@ $config = [
                 ? 'Edvlerblog\Adldap2\model\UserDbLdap'
                 : 'app\models\User',
             'enableAutoLogin' => true,
+            'authTimeout' => $params['sessionTimeout'],
+            'absoluteAuthTimeout' => $params['sessionTimeout'],
+            'identityCookie' => [
+                'name' => '_bgysIdentity',
+                'httpOnly' => true,
+                'secure' => $secureCookies,
+                'sameSite' => yii\web\Cookie::SAME_SITE_LAX,
+            ],
+        ],
+        'session' => [
+            'timeout' => $params['sessionTimeout'],
+            'cookieParams' => [
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => $secureCookies,
+                'httponly' => true,
+                'samesite' => yii\web\Cookie::SAME_SITE_LAX,
+            ],
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',

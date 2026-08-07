@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgyscihazbakim;
 use app\models\BgyscihazbakimSearch;
 use app\models\Envcihazliste;
@@ -221,6 +222,7 @@ class BgyscihazbakimController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_cihaz_bakim');
         $eskiformlar=json_decode($model->bakimformlari ?: '[]', true);
         if (!is_array($eskiformlar)) {
             $eskiformlar = [];
@@ -308,6 +310,9 @@ class BgyscihazbakimController extends Controller
      */
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_cihaz_bakim');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;

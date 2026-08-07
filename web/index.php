@@ -1,7 +1,9 @@
 <?php
-// comment out the following two lines when deployed to production
-defined('YII_DEBUG') or define('YII_DEBUG', true);
-defined('YII_ENV') or define('YII_ENV', 'dev');
+$bgysEnvironment = getenv('BGYS_ENV') ?: 'prod';
+$bgysDebug = getenv('BGYS_DEBUG') === '1';
+
+defined('YII_DEBUG') or define('YII_DEBUG', $bgysDebug);
+defined('YII_ENV') or define('YII_ENV', $bgysEnvironment);
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';

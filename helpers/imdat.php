@@ -25,7 +25,10 @@ class imdat
 
 	public static function kayittankursdurumu($id)
 	{
-	  	$durumu = Yii::$app->db->createCommand('SELECT durumu FROM basvuru_kurslar where id='.$id)->queryAll();	
+		$durumu = Yii::$app->db->createCommand(
+			'SELECT durumu FROM {{%basvuru_kurslar}} WHERE id = :id',
+			[':id' => (int)$id]
+		)->queryAll();
 	  	if (count($durumu)!=0) {
 	  		//var_dump($durumu[0]['durumu']);exit;
 	  		$durumu=$durumu[0]['durumu'];
@@ -65,7 +68,15 @@ class imdat
 
 	public function kayitbenimmi($user,$id,$table)
 	{
-		$kayitkontrol = Yii::$app->db->createCommand('SELECT id FROM '.$table.' where userid='.$user.' and id='.$id)->queryAll();
+		if (!is_string($table) || !preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $table)) {
+			throw new \InvalidArgumentException('Gecersiz tablo adi.');
+		}
+
+		$tableName = Yii::$app->db->quoteTableName($table);
+		$kayitkontrol = Yii::$app->db->createCommand(
+			"SELECT id FROM {$tableName} WHERE userid = :userid AND id = :id",
+			[':userid' => (int)$user, ':id' => (int)$id]
+		)->queryAll();
 		//var_dump(count($kayitkontrol));exit;
 		if (count($kayitkontrol)!=0) {
 			return 1;
@@ -77,7 +88,10 @@ class imdat
 
 	public static function userbilgibenimmi($id)
 	{
-		$kayitkontrol = Yii::$app->db->createCommand('SELECT id FROM user_bilgi where kisi_id='.$id)->queryone();
+		$kayitkontrol = Yii::$app->db->createCommand(
+			'SELECT id FROM {{%user_bilgi}} WHERE kisi_id = :id',
+			[':id' => (int)$id]
+		)->queryOne();
 		//var_dump(($kayitkontrol));exit;
 		if ($kayitkontrol) {
 			return 1;

@@ -80,7 +80,7 @@ DatePickerLanguageAsset::register($this)->js[] = 'bootstrap-datepicker.tr.min.js
     <div class="form-group col-lg-6">
     <?php 
         if (!$model->isNewRecord && Yii::$app->user->can('BGYS_Yonetim_Temsilcisi') ) {
-             echo Html::a('Dif Takip Onayla', ['diftakiponay', 'i'=>$model->id] ,['class'=>'btn btn-info btn-lg']);
+             echo Html::a('Dif Takip Onayla', ['diftakiponay', 'i'=>$model->id], ['class'=>'btn btn-info btn-lg', 'data-method'=>'post']);
         }
     ?>
     </div>

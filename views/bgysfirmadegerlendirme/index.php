@@ -151,7 +151,7 @@ Modal::end();
                         return  
                             (Yii::$app->user->can('BGYS_Yonetim_Temsilcisi') and (!$model->onay) )
                             ? 
-                                Html::a(' Onayla', ['onay', 'i'=>$model->id] ,['class'=>'btn btn-info btn-xs' ])
+                                Html::a(' Onayla', ['onay', 'i'=>$model->id], ['class'=>'btn btn-info btn-xs', 'data-method'=>'post'])
                             : 
                                 null;
                     },
@@ -159,7 +159,7 @@ Modal::end();
                         return  
                             (Yii::$app->user->can('BGYS_Yonetim_Temsilcisi') and $model->onay) 
                             ? 
-                                Html::a(' İptal', ['onaykaldir', 'i'=>$model->id] ,['class'=>'btn btn-danger btn-xs' ])
+                                Html::a(' İptal', ['onaykaldir', 'i'=>$model->id], ['class'=>'btn btn-danger btn-xs', 'data-method'=>'post'])
                             : 
                                 null;
                     },   

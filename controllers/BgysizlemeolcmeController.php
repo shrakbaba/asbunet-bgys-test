@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysizlemeolcme;
 use app\models\BgysizlemeolcmeSearch;
 use app\models\Bgysizlemesonucu;
@@ -60,7 +61,9 @@ class BgysizlemeolcmeController extends Controller
 
     public function actionKayitgir($id)
     {
-        if (bgys::olcmesorumlumu($id) or Yii::$app->user->can('bilgiislem_admin')) {      
+        $izleme = $this->findModel($id);
+        RecordAccess::assertCanManage($izleme, ['sorumlu'], 'bgys_izlemeolcme');
+        if (RecordAccess::canManage($izleme, ['sorumlu']) or Yii::$app->user->can('bilgiislem_admin')) {
             $sonuclar=Bgysizlemesonucu::find()->where(['izlemeid'=>$id])->all();
             $olcum_sikligi=$this->findModel($id)->olcum_sikligi;        
             //1 =>"Yılda 1", 2 =>"6 Ayda bir", 3 =>"3 Ayda 1", 4 =>"Ayda 1"
@@ -104,11 +107,17 @@ class BgysizlemeolcmeController extends Controller
 
     public function actionKayitsil($id)
     {
+        $sonuc = Bgysizlemesonucu::findOne($id);
+        if ($sonuc === null || $sonuc->izleme === null) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+        RecordAccess::assertCanManage($sonuc->izleme, ['sorumlu'], 'bgys_izlemesonucu');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         try {
             //bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'marka silindi','marka:'.$this->findModel($id)->marka );
-            Bgysizlemesonucu::findOne($id)->delete();
+            $sonuc->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);
@@ -155,6 +164,7 @@ class BgysizlemeolcmeController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_izlemeolcme');
 
         if ($model->load(Yii::$app->request->post())){            
              $model->planlanan_tarihi= $model->planlanan_tarihi."-01";
@@ -170,11 +180,14 @@ class BgysizlemeolcmeController extends Controller
 
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_izlemeolcme');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         try {
             //bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'marka silindi','marka:'.$this->findModel($id)->marka );
-            $this->findModel($id)->delete();
+            $model->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);
