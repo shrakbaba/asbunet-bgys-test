@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\components\RecordAccess;
+use app\components\SecureFileStorage;
 use app\models\Bgyscihazbakim;
 use app\models\BgyscihazbakimSearch;
 use app\models\Envcihazliste;
@@ -42,7 +43,7 @@ class BgyscihazbakimController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['index','view',],
+                        'actions' => ['index','view','download'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -144,58 +145,38 @@ class BgyscihazbakimController extends Controller
                 
                 $model->bakimtarihi=imdat::tomysqldate($model->bakimtarihi);
 
-                if (UploadedFile::getInstance($model,'file')) {
-                    $model->file =UploadedFile::getInstance($model,'file'); 
-                    $ext = $model->file->extension;
-                    $model->sozlesme = Yii::$app->security->generateRandomString().".{$ext}";
-                    //echo dirname(dirname(__DIR__));exit;
-                    $path = Yii::getAlias('@env_dosya') ."bgys/".md5("bakim")."/".$model->sozlesme;
-                    $model->file->saveAs($path);
-                }
-                $model->file=null;
+                $model->file = UploadedFile::getInstance($model, 'file');
+                $model->bakimlar = UploadedFile::getInstances($model, 'bakimlar');
 
-                    //echo "2";
-
-
-                $model->bakimformlari = UploadedFile::getInstances($model, 'bakimlar');
-
-                if ($model->bakimformlari) {
-                    $images = [];
-                    $i=0;
-                    foreach ($model->bakimformlari as $file) {
-
-                        $ext = $file->extension;
-
-                        $img_name = Yii::$app->getSecurity()->generateRandomString().".{$ext}";    
-
-                        $path = Yii::getAlias('@env_dosya') ."bgys/".md5("bakim")."/".$img_name;    
-                        $file->saveAs($path);   
-                        
-
-                        //array_push($images,$img_name);
-                         $images[] = $img_name;
-                        //$images[$i]= $img_name;
-                        //$i++;
+                if ($model->validate()) {
+                    $storedFiles = [];
+                    try {
+                        if ($model->file) {
+                            $model->sozlesme = SecureFileStorage::storePdf($model->file, 'maintenance');
+                            $storedFiles[] = $model->sozlesme;
+                        }
+                        $formFiles = [];
+                        foreach ($model->bakimlar as $file) {
+                            $stored = SecureFileStorage::storePdf($file, 'maintenance');
+                            $formFiles[] = $stored;
+                            $storedFiles[] = $stored;
+                        }
+                    } catch (\Throwable $exception) {
+                        $this->deleteMaintenanceFiles($storedFiles);
+                        throw $exception;
                     }
+                    $model->bakimformlari = $formFiles ? json_encode($formFiles) : null;
+                    $model->file = null;
+                    $model->bakimlar = null;
 
-                    $images=json_encode($images);
-                    $model->bakimformlari = $images;
-                }else{
-                    $model->bakimformlari = null;
-                } 
-                $model->bakimlar=null;
-
-
-                if ($model->validate()) {     
-                        //var_dump($model->errors);exit;           
-
-                    if ($model->save()) {
+                    if ($model->save(false)) {
                         if (Yii::$app->request->isAjax) {
                             Yii::$app->session->setFlash('success','Bakım kaydı oluşturuldu.');
                             return '<script>window.location.reload();</script>';
                         }
                         return $this->redirect(['view', 'id' => $model->id]);
                     }else{
+                        $this->deleteMaintenanceFiles($storedFiles);
                         Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                         return $this->redirect(['index']);
                     }
@@ -227,6 +208,7 @@ class BgyscihazbakimController extends Controller
         if (!is_array($eskiformlar)) {
             $eskiformlar = [];
         }
+        $eskiSozlesme = $model->sozlesme;
         //var_dump($eskiformlar);exit;
          $model->bakimtarihi = date("d/m/Y", strtotime($model->bakimtarihi));
 
@@ -235,53 +217,42 @@ class BgyscihazbakimController extends Controller
                 $model->kayittarihi=Yii::$app->formatter->asDate(time(), 'php:Y-m-d');
                 $model->bakimtarihi=imdat::tomysqldate($model->bakimtarihi);
 
-                if (UploadedFile::getInstance($model,'file')) {
-                            $model->file =UploadedFile::getInstance($model,'file'); 
-                            $ext = $model->file->extension;
-                            $model->sozlesme = Yii::$app->security->generateRandomString().".{$ext}";
-                            $path = Yii::getAlias('@env_dosya') ."bgys/".md5("bakim")."/".$model->sozlesme;
-                            $model->file->saveAs($path);
+                $model->file = UploadedFile::getInstance($model, 'file');
+                $model->bakimlar = UploadedFile::getInstances($model, 'bakimlar');
+
+                if ($model->validate()) {
+                    $storedFiles = [];
+                    try {
+                        if ($model->file) {
+                            $model->sozlesme = SecureFileStorage::storePdf($model->file, 'maintenance');
+                            $storedFiles[] = $model->sozlesme;
+                        } else {
+                            $model->sozlesme = $eskiSozlesme;
+                        }
+                        foreach ($model->bakimlar as $file) {
+                            $stored = SecureFileStorage::storePdf($file, 'maintenance');
+                            $storedFiles[] = $stored;
+                            $eskiformlar[] = $stored;
+                        }
+                    } catch (\Throwable $exception) {
+                        $this->deleteMaintenanceFiles($storedFiles);
+                        throw $exception;
                     }
-                    $model->file=null;
-                    
-                $model->bakimformlari = UploadedFile::getInstances($model, 'bakimlar');
+                    $model->bakimformlari = $eskiformlar ? json_encode($eskiformlar) : null;
+                    $model->file = null;
+                    $model->bakimlar = null;
 
-                if ($model->bakimformlari) {
-                    $images = [];
-                    $i=0;
-                    foreach ($model->bakimformlari as $file) {
-
-                            $ext = $file->extension;
-                            
-                        $img_name = Yii::$app->getSecurity()->generateRandomString().".{$ext}";    
-
-                        $path = Yii::getAlias('@env_dosya') ."bgys/".md5("bakim")."/".$img_name;    
-                        $file->saveAs($path);   
-                        
-                        $eskiformlar[] = $img_name;
-                        //array_push($eskiformlar,$img_name);
-                        //$images[$i]= $img_name;
-                        //$i++;
-                    }
-
-                    $images=json_encode($eskiformlar);
-                    $model->bakimformlari = $images;
-                }else{
-                    $model->bakimformlari = json_encode($eskiformlar);
-                } 
-                    $model->bakimlar=null;
-
-
-                    if ($model->validate()) {     
-                        //var_dump($model->errors);exit;           
-                            
-                        if ($model->save()) {
+                    if ($model->save(false)) {
+                            if ($eskiSozlesme && $eskiSozlesme !== $model->sozlesme) {
+                                SecureFileStorage::delete($eskiSozlesme, 'maintenance', [$this->legacyMaintenanceDirectory()]);
+                            }
                             if (Yii::$app->request->isAjax) {
                                 Yii::$app->session->setFlash('success','Bakım kaydı güncellendi.');
                                 return '<script>window.location.reload();</script>';
                             }
                             return $this->redirect(['view', 'id' => $model->id]);
                         }else{
+                            $this->deleteMaintenanceFiles($storedFiles);
                             Yii::$app->session->setFlash('error','Kaydedilemedi. Tekrar deneyiniz.');
                             return $this->redirect(['index']);
                         }
@@ -316,28 +287,11 @@ class BgyscihazbakimController extends Controller
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;
-        $yol2=Yii::$app->basePath .'/web/uploads/bgys/'.md5("bakim")."/". $this->findModel($id)->sozlesme;
-        //var_dump($yol);exit;
         try {
-            //echo "<pre>";var_dump($this->findModel($id));exit;
-            if ($this->findModel($id)->sozlesme and file_exists($yol2)) {
-                //echo 1;exit;
-                unlink($yol2);
-            } 
-            if ($this->findModel($id)->bakimformlari ) {
-                $formlar=$this->findModel($id)->bakimformlari;
-                $formlar=json_decode($formlar);
-                foreach ($formlar as $key => $value) {
-                    $yol=Yii::$app->basePath .'/web/uploads/bgys/'.md5("bakim")."/". $value;
-                    if (file_exists($yol)) {
-                        unlink($yol);        
-                     } 
-                }
-                //echo 1;exit;
-                
-            }
-            //echo 2;exit;
-            $this->findModel($id)->delete();
+            SecureFileStorage::delete($model->sozlesme, 'maintenance', [$this->legacyMaintenanceDirectory()]);
+            $formlar = json_decode($model->bakimformlari ?: '[]', true);
+            $this->deleteMaintenanceFiles(is_array($formlar) ? $formlar : [], true);
+            $model->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);
@@ -371,5 +325,46 @@ class BgyscihazbakimController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDownload($id, $type, $index = null)
+    {
+        $model = $this->findModel($id);
+        if ($type === 'contract') {
+            $fileName = $model->sozlesme;
+            $downloadName = 'bakim-sozlesmesi-' . $model->id . '.pdf';
+        } elseif ($type === 'form') {
+            $forms = json_decode($model->bakimformlari ?: '[]', true);
+            $index = filter_var($index, FILTER_VALIDATE_INT);
+            if (!is_array($forms) || $index === false || !array_key_exists($index, $forms)) {
+                throw new NotFoundHttpException('Bakım formu bulunamadı.');
+            }
+            $fileName = $forms[$index];
+            $downloadName = 'bakim-formu-' . $model->id . '-' . ($index + 1) . '.pdf';
+        } else {
+            throw new NotFoundHttpException('Belge türü bulunamadı.');
+        }
+
+        if (!$fileName) {
+            throw new NotFoundHttpException('Belge bulunamadı.');
+        }
+        $path = SecureFileStorage::find($fileName, 'maintenance', [$this->legacyMaintenanceDirectory()]);
+        return Yii::$app->response->sendFile($path, $downloadName, [
+            'mimeType' => 'application/pdf',
+            'inline' => false,
+        ]);
+    }
+
+    private function deleteMaintenanceFiles(array $fileNames, $includeLegacy = false)
+    {
+        $legacy = $includeLegacy ? [$this->legacyMaintenanceDirectory()] : [];
+        foreach ($fileNames as $fileName) {
+            SecureFileStorage::delete($fileName, 'maintenance', $legacy);
+        }
+    }
+
+    private function legacyMaintenanceDirectory()
+    {
+        return Yii::$app->basePath . '/web/uploads/bgys/' . md5('bakim');
     }
 }
