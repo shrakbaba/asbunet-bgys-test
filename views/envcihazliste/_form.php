@@ -9,6 +9,7 @@ use app\models\Envmodel;
 use app\models\Envcihazturu;
 use app\models\Userdb;
 use app\models\Userbilgi;
+use app\models\Bgysvarlikenvanteri;
 
 use dosamigos\datepicker\DatePicker;
 use dosamigos\datepicker\DateRangePicker;
@@ -55,6 +56,18 @@ use kartik\select2\Select2;
     ?>
    
     <?= $form->field($model, 'adet')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'bgys_asset_id')->widget(Select2::classname(), [
+        'data' => ArrayHelper::map(
+            Bgysvarlikenvanteri::find()->orderBy(['varlik_adi' => SORT_ASC])->all(),
+            'id',
+            function ($asset) {
+                return $asset->varlik_adi . ($asset->varlik_sahibi ? ' / ' . $asset->varlik_sahibi : '');
+            }
+        ),
+        'options' => ['placeholder' => 'İlişkili BGYS varlığını seçin'],
+        'pluginOptions' => ['allowClear' => true],
+    ])->hint('Donanımın bilgi güvenliği sınıflandırması ve riskleri bu BGYS varlığı üzerinden yönetilir.') ?>
 
    
     <?= $form->field($model, 'alim_tarihi')->textInput()->label('Garanti Süresi')->widget(DateRangePicker::className(), [

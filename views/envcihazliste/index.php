@@ -99,6 +99,14 @@ td {
                 'width' => '10%',
             ],
             [
+                'attribute' => 'bgys_asset_id',
+                'value' => function ($model) {
+                    return $model->bgysAsset ? $model->bgysAsset->varlik_adi : '(Bağlı değil)';
+                },
+                'filter' => false,
+                'width' => '12%',
+            ],
+            [
                 'attribute'=>'adet',
                 'format'=>'raw',
                 'width' => '5%',

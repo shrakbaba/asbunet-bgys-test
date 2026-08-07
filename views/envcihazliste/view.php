@@ -36,6 +36,10 @@ echo DetailView::widget([
         ],
         'adet',
         [
+            'attribute' => 'bgys_asset_id',
+            'value' => $model->bgysAsset ? $model->bgysAsset->varlik_adi : '(Bağlı değil)',
+        ],
+        [
             'attribute' => 'alim_tarihi',
             'format' => ['date', 'php:d/m/Y']
         ], 'duyuru6',
@@ -84,6 +88,33 @@ echo DetailView::widget([
     ]
     
 ]); ?>
+
+<h4>Zimmet Geçmişi</h4>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Kullanıcı</th>
+                <th>Teslim Tarihi</th>
+                <th>İade Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php if ($model->zimmetHistory) { ?>
+            <?php foreach ($model->zimmetHistory as $assignment) { ?>
+                <?php $userInfo = Userbilgi::findOne(['kisi_id' => $assignment->user_id]); ?>
+                <tr>
+                    <td><?= Html::encode($userInfo ? trim($userInfo->ad . ' ' . $userInfo->soyad) : 'Kullanıcı #' . $assignment->user_id) ?></td>
+                    <td><?= Yii::$app->formatter->asDatetime($assignment->teslim_tarihi, 'php:d/m/Y H:i') ?></td>
+                    <td><?= $assignment->iade_tarihi ? Yii::$app->formatter->asDatetime($assignment->iade_tarihi, 'php:d/m/Y H:i') : 'Aktif' ?></td>
+                </tr>
+            <?php } ?>
+        <?php } else { ?>
+            <tr><td colspan="3">Zimmet geçmişi bulunmuyor.</td></tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</div>
 <?php if ($model->dosya) {      ?>
                         <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("cihaz")."/".$model->dosya ?>')" style="margin: 10px;color:white">Belge</span>
                 <?php } ?>

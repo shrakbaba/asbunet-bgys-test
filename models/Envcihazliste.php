@@ -37,12 +37,13 @@ class Envcihazliste extends \yii\db\ActiveRecord
     {
         return [
             [['cihaz_turu_id', 'marka_id', 'model_id','alim_tarihi','garanti_bitis'], 'required'],
-            [['cihaz_turu_id', 'marka_id', 'model_id','duyuru6','duyuru3','duyuru1','adet','zimmet'], 'integer'],
+            [['cihaz_turu_id', 'marka_id', 'model_id','duyuru6','duyuru3','duyuru1','adet','zimmet','bgys_asset_id','created_by'], 'integer'],
             [['alim_tarihi','garanti_bitis','file'], 'safe'],
             [['konum','key','service_tag','dosya','link','ozet'], 'string', 'max' => 255],
             [['cihaz_turu_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envcihazturu::className(), 'targetAttribute' => ['cihaz_turu_id' => 'id']],
             [['marka_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmarka::className(), 'targetAttribute' => ['marka_id' => 'id']],
             [['model_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmodel::className(), 'targetAttribute' => ['model_id' => 'id']],
+            [['bgys_asset_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => Bgysvarlikenvanteri::className(), 'targetAttribute' => ['bgys_asset_id' => 'id']],
             //[['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['zimmet' => 'id']],
             (Yii::$app->params['giristipi']==1) 
             ? [['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' =>\Edvlerblog\Adldap2\model\UserDbLdap::className() , 'targetAttribute' => ['zimmet' => 'id']]
@@ -58,6 +59,8 @@ class Envcihazliste extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'bgys_asset_id' => 'BGYS Varlığı',
+            'created_by' => 'Oluşturan Kullanıcı',
             'cihaz_turu_id' => 'Cihaz Türü',
             'marka_id' => 'Marka',
             'model_id' => 'Model',
@@ -72,7 +75,8 @@ class Envcihazliste extends \yii\db\ActiveRecord
             'konum'=>'Konumu',
             'link'=>'Cihaz Linki',
             'ozet'=>'Özet Bilgi',
-            'file'=>'Alım Belgesi (pdf)'
+            'file'=>'Alım Belgesi (pdf)',
+            'zimmet' => 'Zimmetli Kullanıcı',
         ];
     }
 
@@ -108,5 +112,16 @@ class Envcihazliste extends \yii\db\ActiveRecord
         :
             $this->hasOne(Userdb::className(), ['id' => 'zimmet']);
 
+    }
+
+    public function getBgysAsset()
+    {
+        return $this->hasOne(Bgysvarlikenvanteri::className(), ['id' => 'bgys_asset_id']);
+    }
+
+    public function getZimmetHistory()
+    {
+        return $this->hasMany(Envcihazzimmet::className(), ['cihaz_id' => 'id'])
+            ->orderBy(['teslim_tarihi' => SORT_DESC, 'id' => SORT_DESC]);
     }
 }

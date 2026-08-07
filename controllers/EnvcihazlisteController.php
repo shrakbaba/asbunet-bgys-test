@@ -3,8 +3,10 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Envcihazliste;
 use app\models\EnvcihazlisteSearch;
+use app\models\Envcihazzimmet;
 use app\models\Authassignment;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -231,6 +233,7 @@ class EnvcihazlisteController extends Controller
 
         if ($model->load(Yii::$app->request->post())) 
             {
+                $model->created_by = Yii::$app->user->id;
                 $model->alim_tarihi=imdat::tomysqldate($model->alim_tarihi);
                 $model->garanti_bitis=imdat::tomysqldate($model->garanti_bitis);
                 //echo $model->alim_tarihi;echo "<br>";echo $model->garanti_bitis;exit;
@@ -245,6 +248,7 @@ class EnvcihazlisteController extends Controller
                     if ($model->validate()) {                
                             
                         if ($model->save()) {
+                            $this->syncAssignmentHistory($model, null);
                             $model->file->saveAs($path);
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz tanımlandı','cihaz:'.$model->id );
                             //return $this->redirect(['view', 'id' => $model->id]);                            
@@ -260,6 +264,7 @@ class EnvcihazlisteController extends Controller
                         }
                 }  else{
                     if ($model->save()) { 
+                        $this->syncAssignmentHistory($model, null);
                         return $this->redirect(Yii::$app->request->referrer);
                     }
                 } 
@@ -274,6 +279,8 @@ class EnvcihazlisteController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['created_by'], 'env_cihaz_liste');
+        $oldZimmet = $model->zimmet;
         
         $model->alim_tarihi=imdat::mysqltowebdate($model->alim_tarihi);
         $model->garanti_bitis=imdat::mysqltowebdate($model->garanti_bitis); 
@@ -293,6 +300,7 @@ class EnvcihazlisteController extends Controller
                     if ($model->validate()) {                
                             
                         if ($model->save()) {
+                            $this->syncAssignmentHistory($model, $oldZimmet);
                             $model->file->saveAs($path);
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cihaz guncellendi','cihaz:'.$model->id );
                             //return $this->redirect(['view', 'id' => $model->id]);
@@ -307,6 +315,7 @@ class EnvcihazlisteController extends Controller
                         }
                 }  else{
                     if ($model->save()) { 
+                            $this->syncAssignmentHistory($model, $oldZimmet);
                             return $this->redirect(Yii::$app->request->referrer);
                     }
                 } 
@@ -324,6 +333,8 @@ class EnvcihazlisteController extends Controller
     
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['created_by'], 'env_cihaz_liste');
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;
@@ -360,6 +371,7 @@ class EnvcihazlisteController extends Controller
     public function actionPdfsil($i=null)
     { 
         if ($i) {
+            RecordAccess::assertCanManage($this->findModel($i), ['created_by'], 'env_cihaz_liste');
                 //echo "<pre>";var_dump($this->findModel($i)->belge);exit;
             if ($this->findModel($i)->dosya) {
 
@@ -399,5 +411,47 @@ class EnvcihazlisteController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    private function syncAssignmentHistory(Envcihazliste $device, $oldUserId)
+    {
+        $newUserId = $device->zimmet ? (int)$device->zimmet : null;
+        $oldUserId = $oldUserId ? (int)$oldUserId : null;
+        $activeAssignment = Envcihazzimmet::find()
+            ->where(['cihaz_id' => $device->id, 'iade_tarihi' => null])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        if ($newUserId === $oldUserId && ($newUserId === null || $activeAssignment !== null)) {
+            return;
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($activeAssignment !== null) {
+                $activeAssignment->iade_tarihi = date('Y-m-d H:i:s');
+                $activeAssignment->iade_alan_id = Yii::$app->user->id;
+                if (!$activeAssignment->save()) {
+                    throw new \RuntimeException('Zimmet iade geçmişi kaydedilemedi.');
+                }
+            }
+
+            if ($newUserId !== null) {
+                $assignment = new Envcihazzimmet();
+                $assignment->cihaz_id = $device->id;
+                $assignment->user_id = $newUserId;
+                $assignment->teslim_tarihi = date('Y-m-d H:i:s');
+                $assignment->teslim_eden_id = Yii::$app->user->id;
+                if (!$assignment->save()) {
+                    throw new \RuntimeException('Yeni zimmet geçmişi kaydedilemedi.');
+                }
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $exception) {
+            $transaction->rollBack();
+            Yii::error($exception, 'device-assignment');
+            throw $exception;
+        }
     }
 }
