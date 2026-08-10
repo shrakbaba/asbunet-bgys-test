@@ -1,6 +1,7 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
+ErrorDocument 403 /errors/403.html
 RewriteRule ^uploads/bgys(?:/|$) - [F,L,NC]
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
