@@ -77,6 +77,14 @@ Modal::end();
                 'attribute' => 'cihaz_turu',
                 'headerOptions' => ['style' => 'width:45%'],
             ],
+            [
+                'attribute' => 'asset_type',
+                'filter' => \app\models\Bgysvarlikenvanteri::assetTypeOptions(),
+                'value' => function ($model) {
+                    return \app\models\Bgysvarlikenvanteri::assetTypeOptions()[$model->asset_type] ?? 'Sınıflandırılmamış';
+                },
+                'headerOptions' => ['style' => 'width:25%'],
+            ],
 
             [
                 'class' => 'yii\grid\ActionColumn',

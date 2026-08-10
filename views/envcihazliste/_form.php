@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use app\models\Envmarka;
 use app\models\Envmodel;
 use app\models\Envcihazturu;
@@ -19,6 +20,19 @@ use kartik\select2\Select2;
 /* @var $this yii\web\View */
 /* @var $model app\models\Envcihazliste */
 /* @var $form yii\widgets\ActiveForm */
+$selectedType = $model->cihaz_turu_id ? Envcihazturu::findOne($model->cihaz_turu_id) : null;
+$brandQuery = Envmarka::find()->alias('b');
+$selectedType
+    ? $brandQuery->innerJoin('env_cihaz_turu_marka tm', 'tm.marka_id=b.id')->andWhere(['tm.cihaz_turu_id' => $selectedType->id])
+    : $brandQuery->andWhere('0=1');
+$modelQuery = Envmodel::find()->alias('m');
+($selectedType && $model->marka_id)
+    ? $modelQuery->innerJoin('env_cihaz_turu_model tt', 'tt.model_id=m.id')->andWhere(['tt.cihaz_turu_id' => $selectedType->id, 'm.marka_id' => $model->marka_id])
+    : $modelQuery->andWhere('0=1');
+$assetQuery = Bgysvarlikenvanteri::find();
+($selectedType && $selectedType->asset_type)
+    ? $assetQuery->andWhere(['asset_type' => $selectedType->asset_type])
+    : $assetQuery->andWhere('0=1');
 ?>
 
 <div class="envcihazliste-form">
@@ -35,11 +49,8 @@ use kartik\select2\Select2;
     ?>
 
                    <?= $form->field($model, 'marka_id')->widget(Select2::classname(), [
-        'data' => ArrayHelper::map(Envmarka::find()->all(),'id','marka'),
-        'options' => ['placeholder' => 'Marka Seçiniz','onchange'=>'
-                 $.post( "/envmodel/lists?id='.'"+$(this).val(), function( data ) {
-                  $( "select#envcihazliste-model_id" ).html( data );
-                });'],
+        'data' => ArrayHelper::map($brandQuery->orderBy('b.marka')->all(),'id','marka'),
+        'options' => ['placeholder' => 'Marka Seçiniz'],
         'pluginOptions' => [
             'allowClear' => true
         ],
@@ -47,7 +58,7 @@ use kartik\select2\Select2;
     ?>
 
           <?= $form->field($model, 'model_id')->widget(Select2::classname(), [
-        'data' => ArrayHelper::map(Envmodel::find()->all(),'id','model'),
+        'data' => ArrayHelper::map($modelQuery->orderBy('m.model')->all(),'id','model'),
         'options' => ['placeholder' => 'Model Seçiniz',],
         'pluginOptions' => [
             'allowClear' => true
@@ -59,8 +70,7 @@ use kartik\select2\Select2;
 
     <?= $form->field($model, 'bgys_asset_id')->widget(Select2::classname(), [
         'data' => ArrayHelper::map(
-            Bgysvarlikenvanteri::find()
-                ->where(['asset_type' => Bgysvarlikenvanteri::TYPE_HARDWARE])
+            $assetQuery
                 ->orderBy(['varlik_adi' => SORT_ASC])
                 ->all(),
             'id',
@@ -70,7 +80,7 @@ use kartik\select2\Select2;
         ),
         'options' => ['placeholder' => 'İlişkili BGYS varlığını seçin'],
         'pluginOptions' => ['allowClear' => true],
-    ])->hint('Donanımın bilgi güvenliği sınıflandırması ve riskleri bu BGYS varlığı üzerinden yönetilir.') ?>
+    ])->hint('Seçilen cihaz türünün sınıfına uygun BGYS varlıkları gösterilir. Tür sınıflandırılmamışsa seçenek gelmez.') ?>
 
    
     <?= $form->field($model, 'alim_tarihi')->textInput()->label('Garanti Süresi')->widget(DateRangePicker::className(), [
@@ -158,3 +168,47 @@ use kartik\select2\Select2;
     <?php ActiveForm::end(); ?>
 
 </div>
+
+<?php
+$catalogUrl = Url::to(['/envcihazliste/catalog-options']);
+$typeInput = Html::getInputId($model, 'cihaz_turu_id');
+$brandInput = Html::getInputId($model, 'marka_id');
+$modelInput = Html::getInputId($model, 'model_id');
+$assetInput = Html::getInputId($model, 'bgys_asset_id');
+$this->registerJs(<<<JS
+(function () {
+    var type = $('#{$typeInput}');
+    var brand = $('#{$brandInput}');
+    var model = $('#{$modelInput}');
+    var asset = $('#{$assetInput}');
+
+    function fill(select, rows, selectedValue) {
+        select.empty().append(new Option('', '', false, false));
+        $.each(rows || [], function (_, row) {
+            select.append(new Option(row.text, row.id, false, String(row.id) === String(selectedValue)));
+        });
+        select.trigger('change.select2');
+    }
+
+    function requestCatalog(brandId, selectedBrand, selectedModel, selectedAsset) {
+        if (!type.val()) {
+            fill(brand, [], null); fill(model, [], null); fill(asset, [], null); return;
+        }
+        $.getJSON('{$catalogUrl}', {typeId: type.val(), brandId: brandId || ''}).done(function (data) {
+            if (selectedBrand !== false) {
+                fill(brand, data.brands, selectedBrand);
+                fill(asset, data.assets, selectedAsset);
+            }
+            fill(model, data.models, selectedModel);
+        });
+    }
+
+    type.on('change', function () { requestCatalog(null, null, null, null); });
+    brand.on('change', function () {
+        if (!brand.val()) { fill(model, [], null); return; }
+        requestCatalog(brand.val(), false, null, false);
+    });
+}());
+JS
+);
+?>

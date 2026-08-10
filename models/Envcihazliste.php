@@ -43,6 +43,7 @@ class Envcihazliste extends \yii\db\ActiveRecord
             [['cihaz_turu_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envcihazturu::className(), 'targetAttribute' => ['cihaz_turu_id' => 'id']],
             [['marka_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmarka::className(), 'targetAttribute' => ['marka_id' => 'id']],
             [['model_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmodel::className(), 'targetAttribute' => ['model_id' => 'id']],
+            [['model_id'], 'validateCatalogRelations'],
             [['bgys_asset_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => Bgysvarlikenvanteri::className(), 'targetAttribute' => ['bgys_asset_id' => 'id']],
             [['bgys_asset_id'], 'validateBgysAssetCategory'],
             //[['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['zimmet' => 'id']],
@@ -127,8 +128,30 @@ class Envcihazliste extends \yii\db\ActiveRecord
         }
 
         $asset = Bgysvarlikenvanteri::findOne((int)$this->$attribute);
-        if ($asset === null || $asset->asset_type !== Bgysvarlikenvanteri::TYPE_HARDWARE) {
-            $this->addError($attribute, 'Cihaz yalnız donanım niteliğindeki bir BGYS varlığına bağlanabilir.');
+        $deviceType = Envcihazturu::findOne((int)$this->cihaz_turu_id);
+        if ($deviceType === null || !$deviceType->asset_type) {
+            $this->addError('cihaz_turu_id', 'Cihaz türünün BGYS varlık sınıfı önce Cihaz Türleri ekranından belirlenmelidir.');
+            return;
+        }
+        if ($asset === null || $asset->asset_type !== $deviceType->asset_type) {
+            $this->addError($attribute, 'BGYS varlığı, seçilen cihaz türünün varlık sınıfıyla uyumlu olmalıdır.');
+        }
+    }
+
+    public function validateCatalogRelations($attribute)
+    {
+        if (!$this->cihaz_turu_id || !$this->marka_id || !$this->model_id) {
+            return;
+        }
+        $brandLinked = (new \yii\db\Query())->from('env_cihaz_turu_marka')->where([
+            'cihaz_turu_id' => (int)$this->cihaz_turu_id, 'marka_id' => (int)$this->marka_id,
+        ])->exists();
+        $modelLinked = (new \yii\db\Query())->from('env_cihaz_turu_model')->where([
+            'cihaz_turu_id' => (int)$this->cihaz_turu_id, 'model_id' => (int)$this->model_id,
+        ])->exists();
+        $model = Envmodel::findOne((int)$this->model_id);
+        if (!$brandLinked || !$modelLinked || $model === null || (int)$model->marka_id !== (int)$this->marka_id) {
+            $this->addError($attribute, 'Cihaz türü, marka ve model seçimi birbiriyle uyumlu olmalıdır.');
         }
     }
 

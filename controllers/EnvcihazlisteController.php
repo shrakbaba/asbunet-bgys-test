@@ -9,6 +9,10 @@ use app\models\Envcihazliste;
 use app\models\EnvcihazlisteSearch;
 use app\models\Envcihazzimmet;
 use app\models\Authassignment;
+use app\models\Envcihazturu;
+use app\models\Envmarka;
+use app\models\Envmodel;
+use app\models\Bgysvarlikenvanteri;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -45,7 +49,7 @@ class EnvcihazlisteController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['index','view','dashboard','download'],
+                        'actions' => ['index','view','dashboard','download','catalog-options'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -400,6 +404,31 @@ class EnvcihazlisteController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionCatalogOptions($typeId, $brandId = null)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $type = Envcihazturu::findOne((int)$typeId);
+        if ($type === null) {
+            return ['brands' => [], 'models' => [], 'assets' => [], 'assetType' => null];
+        }
+
+        $brands = Envmarka::find()->alias('b')
+            ->innerJoin('env_cihaz_turu_marka tm', 'tm.marka_id = b.id')
+            ->where(['tm.cihaz_turu_id' => $type->id])->orderBy('b.marka')->select(['id' => 'b.id', 'text' => 'b.marka'])->asArray()->all();
+        $models = [];
+        if ($brandId) {
+            $models = Envmodel::find()->alias('m')
+                ->innerJoin('env_cihaz_turu_model tt', 'tt.model_id = m.id')
+                ->where(['tt.cihaz_turu_id' => $type->id, 'm.marka_id' => (int)$brandId])
+                ->orderBy('m.model')->select(['id' => 'm.id', 'text' => 'm.model'])->asArray()->all();
+        }
+        $assets = $type->asset_type ? array_map(function ($asset) {
+            return ['id' => $asset->id, 'text' => $asset->varlik_adi . ($asset->varlik_sahibi ? ' / ' . $asset->varlik_sahibi : '')];
+        }, Bgysvarlikenvanteri::find()->where(['asset_type' => $type->asset_type])->orderBy('varlik_adi')->all()) : [];
+
+        return ['brands' => $brands, 'models' => $models, 'assets' => $assets, 'assetType' => $type->asset_type];
     }
 
     public function actionDownload($id)
