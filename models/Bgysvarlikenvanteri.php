@@ -57,6 +57,7 @@ class Bgysvarlikenvanteri extends \yii\db\ActiveRecord
         return [
             [['departman', 'bilgi_sinifi', 'lokasyon', 'kategori', 'gizlilik', 'butunluk', 'erisilebilirlik', 'varlik_degeri'], 'integer'],
             [['owner_user_id', 'created_by'], 'integer'],
+            [['source_device_id'], 'integer'],
             [['varlik_adi', 'varlik_sahibi','aciklama'], 'string', 'max' => 255],
             [['asset_type'], 'required'],
             [['asset_type'], 'in', 'range' => array_keys(self::assetTypeOptions())],
@@ -64,6 +65,7 @@ class Bgysvarlikenvanteri extends \yii\db\ActiveRecord
             [['owner_type'], 'in', 'range' => [self::OWNER_TYPE_UNIT, self::OWNER_TYPE_USER]],
             [['owner_unit'], 'in', 'range' => array_keys(self::unitOptions()), 'skipOnEmpty' => true],
             [['owner_user_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => Userbilgi::className(), 'targetAttribute' => ['owner_user_id' => 'kisi_id']],
+            [['source_device_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => Envcihazliste::className(), 'targetAttribute' => ['source_device_id' => 'id']],
             [['owner_type'], 'validateOwnerSelection'],
             [['departman'], 'exist', 'skipOnError' => true, 'targetClass' => Bgysdepartman::className(), 'targetAttribute' => ['departman' => 'id']],
             [['lokasyon'], 'exist', 'skipOnError' => true, 'targetClass' => Bgyslokasyon::className(), 'targetAttribute' => ['lokasyon' => 'id']],
@@ -178,6 +180,7 @@ class Bgysvarlikenvanteri extends \yii\db\ActiveRecord
             'owner_unit' => 'Şube Müdürlüğü',
             'owner_user_id' => 'Kullanıcı',
             'created_by' => 'Oluşturan Kullanıcı',
+            'source_device_id' => 'Kaynak Envanter Kaydı',
             'gizlilik' => 'Gizlilik',
             'butunluk' => 'Bütünlük',
             'erisilebilirlik' => 'Erişilebilirlik',

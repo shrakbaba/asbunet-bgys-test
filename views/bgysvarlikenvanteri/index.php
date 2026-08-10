@@ -51,6 +51,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <p>
     <?= Html::button('Ekle', ['value' => Url::to(['create']),'class' => 'btn btn-lg btn-success modalButton2' ,'style'=>"margin-bottom:5px;"]) ?>
+    <?php $incompleteGeneratedAssets = Bgysvarlikenvanteri::find()->where(['not', ['source_device_id' => null]])->andWhere(['or',
+        ['departman' => null], ['bilgi_sinifi' => null], ['lokasyon' => null],
+        ['gizlilik' => null], ['butunluk' => null], ['erisilebilirlik' => null], ['varlik_degeri' => null],
+    ])->count(); ?>
+    <?= Html::a(
+        'Sınıflandırması Eksik (' . (int)$incompleteGeneratedAssets . ')',
+        ['index', 'BgysvarlikenvanteriSearch' => ['needs_completion' => 1]],
+        ['class' => 'btn btn-lg btn-warning', 'style' => 'margin-bottom:5px;']
+    ) ?>
 </p>
 
 <?php
@@ -119,6 +128,18 @@ $gridColumns = [
             {
                 return bgys::varlikdegeri($data->varlik_degeri);
             }
+    ],
+    [
+        'label' => 'Tamamlama Durumu',
+        'format' => 'raw',
+        'filter' => false,
+        'value' => function ($data) {
+            $missing = $data->source_device_id && (!$data->departman || !$data->bilgi_sinifi || !$data->lokasyon
+                || !$data->gizlilik || !$data->butunluk || !$data->erisilebilirlik || !$data->varlik_degeri);
+            return $missing
+                ? '<span class="label label-warning">Sınıflandırma eksik</span>'
+                : '<span class="label label-success">Tam</span>';
+        },
     ],
     [
         'class' => 'kartik\grid\ActionColumn',
