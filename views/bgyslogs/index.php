@@ -39,9 +39,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format'=>'raw',
                 'value'=>function ($data)
                     {
-                        return @$data->logyapan->username;
+                        return $data->actor ?: @$data->logyapan->username;
                     }
             ], 
+            [
+                'attribute' => 'result',
+                'value' => function ($data) {
+                    return $data->result === 'failure' ? 'Başarısız' : 'Başarılı';
+                },
+                'filter' => ['success' => 'Başarılı', 'failure' => 'Başarısız'],
+            ],
+            'ip_address',
             [
                 'attribute'=>'date',
                 'format' => ['date', 'php:d/m/Y H:i:s'],

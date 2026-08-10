@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'action',
             [
                 'attribute' => 'userid',
-                'value' => @$model->logyapan->username,
+                'value' => $model->actor ?: @$model->logyapan->username,
             ],
             [
                 'attribute'=>'date',
@@ -31,6 +31,16 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'not',
             'islem',
+            'actor',
+            'role',
+            'ip_address',
+            'user_agent',
+            'correlation_id',
+            'result',
+            'record_type',
+            'record_id',
+            'old_values:ntext',
+            'new_values:ntext',
         ],
     ]) ?>
 

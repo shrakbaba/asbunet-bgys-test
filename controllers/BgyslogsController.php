@@ -63,8 +63,13 @@ class BgyslogsController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'audit kaydı görüntülendi', 'audit:' . $model->id, [
+            'record_type' => 'audit_log',
+            'record_id' => $model->id,
+        ]);
         $params = [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ];
 
         return Yii::$app->request->isAjax

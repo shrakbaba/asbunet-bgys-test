@@ -25,20 +25,36 @@ class Bgyslogs extends \yii\db\ActiveRecord
         return 'bgys_logs';
     }
 
+    public function beforeSave($insert)
+    {
+        return $insert && parent::beforeSave($insert);
+    }
+
+    public function beforeDelete()
+    {
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['controller', 'action', 'userid'], 'required'],
+            [['controller', 'action'], 'required'],
+            [['userid'], 'integer'],
            // [['userid'], 'integer'],
             //[['userid'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['userid' => 'id']],
             (Yii::$app->params['giristipi']==1) 
             ? [['userid'], 'exist', 'skipOnError' => true, 'targetClass' =>\Edvlerblog\Adldap2\model\UserDbLdap::className() , 'targetAttribute' => ['userid' => 'id']] 
             : [['userid'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['userid' => 'id']],
-            [['date'], 'safe'],
-            [['controller', 'action', 'not', 'islem'], 'string', 'max' => 255],
+            [['date', 'old_values', 'new_values'], 'safe'],
+            [['controller', 'action', 'not', 'islem', 'actor', 'role'], 'string', 'max' => 255],
+            [['ip_address'], 'string', 'max' => 45],
+            [['user_agent'], 'string', 'max' => 512],
+            [['correlation_id'], 'string', 'max' => 64],
+            [['result'], 'in', 'range' => ['success', 'failure']],
+            [['record_type', 'record_id'], 'string', 'max' => 100],
         ];
     }
 
@@ -55,6 +71,16 @@ class Bgyslogs extends \yii\db\ActiveRecord
             'date' => 'Tarih',
             'not' => 'Not',
             'islem' => 'Islem',
+            'actor' => 'Kullanıcı',
+            'role' => 'Rol',
+            'ip_address' => 'IP Adresi',
+            'user_agent' => 'User-Agent',
+            'correlation_id' => 'İlişki Kimliği',
+            'result' => 'Sonuç',
+            'record_type' => 'Kayıt Türü',
+            'record_id' => 'Kayıt ID',
+            'old_values' => 'Önceki Değerler',
+            'new_values' => 'Yeni Değerler',
         ];
     }
 

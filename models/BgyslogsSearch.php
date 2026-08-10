@@ -17,8 +17,8 @@ class BgyslogsSearch extends Bgyslogs
     public function rules()
     {
         return [
-            [['id', 'userid'], 'integer'],
-            [['controller', 'action', 'date', 'not', 'islem'], 'safe'],
+            [['id'], 'integer'],
+            [['userid', 'controller', 'action', 'date', 'not', 'islem', 'actor', 'result', 'ip_address', 'correlation_id'], 'safe'],
         ];
     }
 
@@ -70,10 +70,15 @@ class BgyslogsSearch extends Bgyslogs
         $query->andFilterWhere(['like', 'controller', $this->controller])
             ->andFilterWhere(['like', 'action', $this->action])
             ->andFilterWhere(['like', 'not', $this->not])
-            ->andFilterWhere(['like', 'islem', $this->islem]);
+            ->andFilterWhere(['like', 'islem', $this->islem])
+            ->andFilterWhere(['like', 'result', $this->result])
+            ->andFilterWhere(['like', 'ip_address', $this->ip_address])
+            ->andFilterWhere(['like', 'correlation_id', $this->correlation_id]);
 
-        $query->joinwith('logyapan');
-        $query->andFilterWhere(['like', 'username', $this->userid]);
+            $query->joinwith('logyapan');
+            if ($this->userid !== null && $this->userid !== '') {
+                $query->andWhere(['or', ['like', 'username', $this->userid], ['like', 'actor', $this->userid]]);
+            }
 
         return $dataProvider;
     }

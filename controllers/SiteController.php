@@ -146,14 +146,21 @@ class SiteController extends Controller
                 //echo ";adsda";exit;
                 //echo "asdsadwqeqead234as";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
-                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','', [
+                    'record_type' => 'authentication',
+                ]);
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi') ) {
                     //echo "yetkivar";exit;
                     return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }
-            }  
+            }
+            bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                'actor' => $model->username,
+                'result' => 'failure',
+                'record_type' => 'authentication',
+            ]);
         }
         return $this->render('login', [
             'model' => $model,
@@ -176,14 +183,21 @@ class SiteController extends Controller
             if ($model->login()) {
                 //echo ";adsda";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
-                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','', [
+                    'record_type' => 'authentication',
+                ]);
                 //return $this->goBack();
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
                     return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }
-            }  
+            }
+            bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                'actor' => $model->username,
+                'result' => 'failure',
+                'record_type' => 'authentication',
+            ]);
         }
         return $this->render('login', [
             'model' => $model,
@@ -192,7 +206,9 @@ class SiteController extends Controller
 
     public function actionLogout()
     {
-        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cikis yapti','' );
+        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cikis yapti','', [
+            'record_type' => 'authentication',
+        ]);
         Yii::$app->user->logout();
         return $this->goHome();
     }
