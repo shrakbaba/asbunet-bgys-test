@@ -171,6 +171,10 @@ td {
         ];
         $butonlar=[
             [
+                'content' => Html::a('Veri Tamamlama', ['data-quality'], ['class' => 'btn btn-primary']),
+                'options' => ['class' => 'btn-group bgys-env-nav']
+            ],
+            [
                 'content' => Html::a('Özet', ['dashboard'], ['class' => 'btn btn-info']) ,
                 'options' => ['class' => 'btn-group bgys-env-nav']
             ],

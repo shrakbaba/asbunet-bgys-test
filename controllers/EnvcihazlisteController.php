@@ -22,6 +22,7 @@ use yii\filters\AccessControl;
 use yii\helpers\imdat;
 use yii\web\UploadedFile;
 use yii\helpers\bgys;
+use yii\data\ActiveDataProvider;
 /**
  * EnvcihazlisteController implements the CRUD actions for Envcihazliste model.
  */
@@ -49,7 +50,7 @@ class EnvcihazlisteController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['index','view','dashboard','download','catalog-options'],
+                        'actions' => ['index','view','dashboard','download','catalog-options','data-quality'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -404,6 +405,52 @@ class EnvcihazlisteController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDataQuality($issue = null)
+    {
+        $query = Envcihazliste::find()->with(['cihazTuru', 'marka', 'model', 'bgysAsset']);
+        switch ($issue) {
+            case 'bgys':
+                $query->andWhere(['bgys_asset_id' => null]);
+                break;
+            case 'amount':
+                $query->andWhere(['or', ['adet' => null], ['<=', 'adet', 0]]);
+                break;
+            case 'location':
+                $query->andWhere(['or', ['konum' => null], ['konum' => '']]);
+                break;
+            case 'document':
+                $query->andWhere(['or', ['dosya' => null], ['dosya' => '']]);
+                break;
+            case 'expired':
+                $query->andWhere(['<', 'garanti_bitis', date('Y-m-d')]);
+                break;
+            case 'legacy':
+                $query->andWhere(['is_legacy' => 1]);
+                break;
+        }
+
+        $summaryQuery = Envcihazliste::find();
+        $summary = [
+            'total' => (int)(clone $summaryQuery)->count(),
+            'bgys' => (int)(clone $summaryQuery)->where(['bgys_asset_id' => null])->count(),
+            'amount' => (int)(clone $summaryQuery)->where(['or', ['adet' => null], ['<=', 'adet', 0]])->count(),
+            'location' => (int)(clone $summaryQuery)->where(['or', ['konum' => null], ['konum' => '']])->count(),
+            'document' => (int)(clone $summaryQuery)->where(['or', ['dosya' => null], ['dosya' => '']])->count(),
+            'expired' => (int)(clone $summaryQuery)->where(['<', 'garanti_bitis', date('Y-m-d')])->count(),
+            'legacy' => (int)(clone $summaryQuery)->where(['is_legacy' => 1])->count(),
+        ];
+
+        return $this->render('data-quality', [
+            'dataProvider' => new ActiveDataProvider([
+                'query' => $query,
+                'sort' => ['defaultOrder' => ['id' => SORT_ASC]],
+                'pagination' => ['pageSize' => 50],
+            ]),
+            'summary' => $summary,
+            'issue' => $issue,
+        ]);
     }
 
     public function actionCatalogOptions($typeId, $brandId = null)

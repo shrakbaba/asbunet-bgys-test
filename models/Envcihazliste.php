@@ -38,6 +38,10 @@ class Envcihazliste extends \yii\db\ActiveRecord
         return [
             [['cihaz_turu_id', 'marka_id', 'model_id','alim_tarihi','garanti_bitis'], 'required'],
             [['cihaz_turu_id', 'marka_id', 'model_id','duyuru6','duyuru3','duyuru1','adet','zimmet','bgys_asset_id','created_by'], 'integer'],
+            [['is_legacy'], 'boolean'],
+            [['bgys_asset_id'], 'required', 'when' => function ($model) {
+                return $model->isNewRecord;
+            }, 'whenClient' => "function () { return false; }"],
             [['alim_tarihi','garanti_bitis','file'], 'safe'],
             [['konum','key','service_tag','dosya','link','ozet'], 'string', 'max' => 255],
             [['cihaz_turu_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envcihazturu::className(), 'targetAttribute' => ['cihaz_turu_id' => 'id']],
@@ -63,6 +67,7 @@ class Envcihazliste extends \yii\db\ActiveRecord
             'id' => 'ID',
             'bgys_asset_id' => 'BGYS Varlığı',
             'created_by' => 'Oluşturan Kullanıcı',
+            'is_legacy' => 'Aktarılan Eski Kayıt',
             'cihaz_turu_id' => 'Cihaz Türü',
             'marka_id' => 'Marka',
             'model_id' => 'Model',
