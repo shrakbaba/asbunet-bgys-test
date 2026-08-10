@@ -1,8 +1,6 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\bootstrap\Modal;
 use kartik\grid\GridView;
 
 /* @var $this yii\web\View */
@@ -73,9 +71,9 @@ $cards = [
                 'label' => 'İşlem',
                 'format' => 'raw',
                 'value' => function ($model) {
-                    return Html::button('Tamamla', [
-                        'class' => 'btn btn-warning btn-xs device-complete',
-                        'data-url' => Url::to(['update', 'id' => $model->id]),
+                    return Html::a('Tamamla', ['update', 'id' => $model->id], [
+                        'class' => 'btn btn-warning btn-xs',
+                        'data-pjax' => '0',
                     ]);
                 },
             ],
@@ -85,23 +83,3 @@ $cards = [
         'hover' => true,
     ]) ?>
 </div>
-
-<?php
-Modal::begin(['id' => 'device-complete-modal', 'size' => 'modal-lg']);
-echo '<div id="device-complete-content"></div>';
-Modal::end();
-
-$this->registerJs(<<<JS
-$(document).off('click.deviceComplete', '.device-complete').on('click.deviceComplete', '.device-complete', function () {
-    var modal = $('#device-complete-modal');
-    modal.find('.modal-body').html('<p>Yükleniyor...</p>');
-    modal.modal('show');
-    $.get($(this).data('url')).done(function (html) {
-        modal.find('.modal-body').html(html);
-    }).fail(function () {
-        modal.find('.modal-body').html('<div class="alert alert-danger">Kayıt formu yüklenemedi.</div>');
-    });
-});
-JS
-);
-?>

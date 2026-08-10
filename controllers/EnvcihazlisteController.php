@@ -322,9 +322,10 @@ class EnvcihazlisteController extends Controller
 
             }
 
-            return $this->renderAjax('update', [
-                'model' => $model,
-            ]);
+            $viewParams = ['model' => $model];
+            return Yii::$app->request->isAjax
+                ? $this->renderAjax('update', $viewParams)
+                : $this->render('update', $viewParams);
 
         }
 
