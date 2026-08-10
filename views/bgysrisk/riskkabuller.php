@@ -105,7 +105,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function($url, $model) {
-                        if (!Yii::$app->user->can('BGYS_Yonetim_Temsilcisi')) {
+                        if (!\app\components\RecordAccess::hasDirectRole('BGYS_Yonetim_Temsilcisi')) {
                             return '';
                         }
                         return Html::button('<span class="glyphicon glyphicon-pencil"></span>', [
@@ -115,7 +115,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function($url, $model) {   //onaylanmamışsa ve kesin başvuru yapmamışsa
-                        if (!Yii::$app->user->can('BGYS_Yonetim_Temsilcisi')) {
+                        if (!\app\components\RecordAccess::hasDirectRole('BGYS_Yonetim_Temsilcisi')) {
                             return '';
                         }
                         return 

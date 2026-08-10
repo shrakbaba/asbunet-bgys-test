@@ -49,7 +49,10 @@ class BgysriskController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['riskkabul','riskkabulview','riskkabulupdate','riskkabuldelete'],
-                        'roles' => ['BGYS_Yonetim_Temsilcisi'],
+                        'roles' => ['@'],
+                        'matchCallback' => function () {
+                            return RecordAccess::hasDirectRole('BGYS_Yonetim_Temsilcisi');
+                        },
                     ],
                     [
                       'allow' => false,

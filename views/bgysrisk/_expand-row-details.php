@@ -45,7 +45,9 @@ use yii\helpers\bgys;
         $kabulmu=Bgysriskkabul::find()->where(['riskid'=>intval($model->id)])->one();
         //var_dump($kabulmu);
         if (is_null($kabulmu)) {
-        	echo Html::a('<button class="btn btn-warning btn-sm" style="margin-bottom:5px" title="Risk Kabul"> Risk Kabul </button>', ['/bgysrisk/riskkabul', 'id'=>$model->id],    ['data-pjax' => '0']) ;
+            if (\app\components\RecordAccess::hasDirectRole('BGYS_Yonetim_Temsilcisi')) {
+                echo Html::a('<button class="btn btn-warning btn-sm" style="margin-bottom:5px" title="Risk Kabul"> Risk Kabul </button>', ['/bgysrisk/riskkabul', 'id'=>$model->id], ['data-pjax' => '0']);
+            }
         }else{
         	?><span style="color:red">Risk zaten kabul edilmiş.</span> <?php
 

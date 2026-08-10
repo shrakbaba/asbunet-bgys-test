@@ -55,4 +55,13 @@ final class RecordAccess
 
         throw new ForbiddenHttpException('Bu kaydi degistirme yetkiniz bulunmuyor.');
     }
+
+    public static function hasDirectRole(string $role): bool
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+
+        return Yii::$app->authManager->getAssignment($role, (string)Yii::$app->user->id) !== null;
+    }
 }
