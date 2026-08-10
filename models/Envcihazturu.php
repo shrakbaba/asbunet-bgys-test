@@ -28,8 +28,9 @@ class Envcihazturu extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['cihaz_turu'], 'required'],
+            [['cihaz_turu', 'asset_type'], 'required'],
             [['cihaz_turu'], 'string', 'max' => 255],
+            [['asset_type'], 'in', 'range' => array_keys(Bgysvarlikenvanteri::assetTypeOptions())],
         ];
     }
 
@@ -41,6 +42,7 @@ class Envcihazturu extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'cihaz_turu' => 'Cihaz Türü',
+            'asset_type' => 'BGYS Varlık Türü',
         ];
     }
 
@@ -50,5 +52,17 @@ class Envcihazturu extends \yii\db\ActiveRecord
     public function getEnvCihazListes()
     {
         return $this->hasMany(Envcihazliste::className(), ['cihaz_turu_id' => 'id']);
+    }
+
+    public function getMarkalar()
+    {
+        return $this->hasMany(Envmarka::className(), ['id' => 'marka_id'])
+            ->viaTable('env_cihaz_turu_marka', ['cihaz_turu_id' => 'id']);
+    }
+
+    public function getModeller()
+    {
+        return $this->hasMany(Envmodel::className(), ['id' => 'model_id'])
+            ->viaTable('env_cihaz_turu_model', ['cihaz_turu_id' => 'id']);
     }
 }

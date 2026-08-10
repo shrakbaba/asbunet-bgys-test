@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="form-group col-lg-6">
     <?php 
         if (Yii::$app->user->can('BGYS_Yonetim_Temsilcisi') ) {
-             echo Html::a('Dif Takip Onayını Kaldır', ['diftakiponayiptal', 'i'=>$model->id] ,['class'=>'btn btn-info btn-lg']);
+             echo Html::a('Dif Takip Onayını Kaldır', ['diftakiponayiptal', 'i'=>$model->id], ['class'=>'btn btn-info btn-lg', 'data-method'=>'post']);
         }
     ?>
     </div>

@@ -84,6 +84,7 @@ class EnvmodelController extends Controller
         $model = new Envmodel();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->syncDeviceTypes($model);
 
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'model tanımlandı','model:'.$model->model );
             //return $this->redirect(['view', 'id' => $model->id]);
@@ -105,6 +106,7 @@ class EnvmodelController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->syncDeviceTypes($model);
 
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'model guncellendi','model:'.$model->model );
             
@@ -156,6 +158,23 @@ class EnvmodelController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    private function syncDeviceTypes(Envmodel $model)
+    {
+        $usedTypeIds = (new \yii\db\Query())->select('cihaz_turu_id')->distinct()->from('env_cihaz_liste')
+            ->where(['model_id' => $model->id])->column();
+        $model->cihaz_turu_ids = array_unique(array_merge((array)$model->cihaz_turu_ids, $usedTypeIds));
+        Yii::$app->db->createCommand()->delete('env_cihaz_turu_model', ['model_id' => $model->id])->execute();
+        $rows = [];
+        foreach (array_unique(array_map('intval', (array)$model->cihaz_turu_ids)) as $typeId) {
+            if ($typeId > 0) {
+                $rows[] = [$typeId, $model->id];
+            }
+        }
+        if ($rows) {
+            Yii::$app->db->createCommand()->batchInsert('env_cihaz_turu_model', ['cihaz_turu_id', 'model_id'], $rows)->execute();
+        }
     }
 
 

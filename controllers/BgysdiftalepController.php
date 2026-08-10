@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysdiftalep;
 use app\models\Bgysdiftakip;
 use app\models\BgysdiftalepSearch;
@@ -30,6 +31,8 @@ class BgysdiftalepController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                    'diftakiponay' => ['POST'],
+                    'diftakiponayiptal' => ['POST'],
                 ],
             ],
             'access' => [
@@ -109,6 +112,7 @@ class BgysdiftalepController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['olusturan_kisi', 'sorumlu'], 'bgys_dif_talep');
         if ( !imdat::difformonaydurumu($model->id) ) {
 
             $model->planlanan_tarih = date("d/m/Y", strtotime($model->planlanan_tarih));
@@ -120,7 +124,6 @@ class BgysdiftalepController extends Controller
                 }
 
                 $model->planlanan_tarih=imdat::tomysqldate($model->planlanan_tarih);
-                $model->olusturan_kisi=Yii::$app->user->id;
                 if ($model->save()) {
                             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'diftalep guncelleme','dif talep:'.$model->dif_konusu);
                    return $this->redirect(['index']);
@@ -147,6 +150,7 @@ class BgysdiftalepController extends Controller
         if ($risk === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
+        RecordAccess::assertCanManage($risk, ['risk_sorumlusu'], 'bgys_risk_dif');
         $riskadi=$risk->risk;
 
         $mevcutDif = Bgysdiftalep::find()
@@ -240,6 +244,7 @@ class BgysdiftalepController extends Controller
     {
         $model = new Bgysdiftakip();
         $diftalep=Bgysdiftalep::findOne($id);
+        RecordAccess::assertCanManage($diftalep, ['olusturan_kisi', 'sorumlu'], 'bgys_dif_talep');
 
         $risk=Bgysrisk::findOne($rsk);
         $model->kokneden=$risk->yuksek_riskin_sebebi;
@@ -273,6 +278,7 @@ class BgysdiftalepController extends Controller
        // echo "geldin";exit;
         $model = new Bgysdiftakip();
         $diftalep=Bgysdiftalep::findOne($i);
+        RecordAccess::assertCanManage($diftalep, ['olusturan_kisi', 'sorumlu'], 'bgys_dif_talep');
 
         if ($model->load(Yii::$app->request->post())) {
             
@@ -314,6 +320,7 @@ class BgysdiftalepController extends Controller
             $render = Yii::$app->request->isAjax ? 'renderAjax' : 'render';
             return $this->$render('onaylidiftakip', ['model' => $model,'diftalep' => $diftalep]);
         }else{
+            RecordAccess::assertCanManage($model, ['dif_sorumlusu'], 'bgys_dif_takip');
            // $model->tamamlanmatarihi = imdat::mysqltowebdate(date('Y-m-d',strtotime($model->tamamlanmatarihi)));
 
             //echo "<pre>";var_dump($model->tamamlanmatarihi);exit;
@@ -332,8 +339,6 @@ class BgysdiftalepController extends Controller
             }
 
                // $model->tamamlanmatarihi=imdat::tomysqldate($model->tamamlanmatarihi);
-                $model->dif_sorumlusu=Yii::$app->user->id;
-
                 if ($model->save()) {
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'dif formu tanimlama','dif talep:'.$model->kokneden);
                    return $this->redirect(['index']);
@@ -381,6 +386,7 @@ class BgysdiftalepController extends Controller
     public function actionDelete($id)
     {
             $model=$this->findModel($id);
+            RecordAccess::assertCanManage($model, ['olusturan_kisi', 'sorumlu'], 'bgys_dif_talep');
             if ( !imdat::difformonaydurumu($model->id)) {
                 $connection = Yii::$app->db;
                 $transaction = $connection->beginTransaction();

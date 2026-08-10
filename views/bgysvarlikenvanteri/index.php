@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use kartik\export\ExportMenu;
 use app\models\Bgyskategori;
 use app\models\Bgysbilgisinifi;
+use app\models\Bgysvarlikenvanteri;
 /* @var $this yii\web\View */
 /* @var $searchModel app\models\BgysvarlikenvanteriSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -50,6 +51,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <p>
     <?= Html::button('Ekle', ['value' => Url::to(['create']),'class' => 'btn btn-lg btn-success modalButton2' ,'style'=>"margin-bottom:5px;"]) ?>
+    <?php $incompleteGeneratedAssets = Bgysvarlikenvanteri::find()->where(['not', ['source_device_id' => null]])->andWhere(['or',
+        ['departman' => null], ['bilgi_sinifi' => null], ['lokasyon' => null],
+        ['gizlilik' => null], ['butunluk' => null], ['erisilebilirlik' => null], ['varlik_degeri' => null],
+    ])->count(); ?>
+    <?= Html::a(
+        'Sınıflandırması Eksik (' . (int)$incompleteGeneratedAssets . ')',
+        ['index', 'BgysvarlikenvanteriSearch' => ['needs_completion' => 1]],
+        ['class' => 'btn btn-lg btn-warning', 'style' => 'margin-bottom:5px;']
+    ) ?>
 </p>
 
 <?php
@@ -67,6 +77,15 @@ $gridColumns = [
         'vAlign' => 'middle',
         'width' => '10%',
     ],                        
+    [
+        'attribute' => 'asset_type',
+        'filter' => Bgysvarlikenvanteri::assetTypeOptions(),
+        'value' => function ($data) {
+            return Bgysvarlikenvanteri::assetTypeOptions()[$data->asset_type] ?? $data->asset_type;
+        },
+        'vAlign' => 'middle',
+        'width' => '10%',
+    ],
     [
         'attribute'=>'bilgi_sinifi',
         'format'=>'raw',
@@ -111,16 +130,32 @@ $gridColumns = [
             }
     ],
     [
+        'label' => 'Tamamlama Durumu',
+        'format' => 'raw',
+        'filter' => false,
+        'value' => function ($data) {
+            $missing = $data->source_device_id && (!$data->departman || !$data->bilgi_sinifi || !$data->lokasyon
+                || !$data->gizlilik || !$data->butunluk || !$data->erisilebilirlik || !$data->varlik_degeri);
+            return $missing
+                ? '<span class="label label-warning">Sınıflandırma eksik</span>'
+                : '<span class="label label-success">Tam</span>';
+        },
+    ],
+    [
         'class' => 'kartik\grid\ActionColumn',
         'header'=>'İşlemler',
         'width' => '10%',
         'template' => '{view}{update}{delete} ',        
         'buttons' => [                                      
             'view' => function ($url,$model) {
-                        return  Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])  ;
+                        return Html::a('<span class="glyphicon glyphicon-eye-open"></span>', ['view', 'id' => $model->id], [
+                            'class' => 'btn btn-success btn-xs', 'title' => 'İncele', 'data-pjax' => '0',
+                        ]);
                          },         
             'update' => function($url, $model) {   //hertürlü
-                return  Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"]) ;
+                return Html::a('<span class="glyphicon glyphicon-pencil"></span>', ['update', 'id' => $model->id], [
+                    'class' => 'btn btn-warning btn-xs', 'title' => 'Güncelle', 'data-pjax' => '0',
+                ]);
                 //return Html::a(Yii::t('app','Update'), ['update', 'id'=>$model->id],['class' => 'btn btn-success modalButton3'] );
 
             },

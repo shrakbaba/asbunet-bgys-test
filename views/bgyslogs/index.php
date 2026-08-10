@@ -15,6 +15,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="bgyslogs-index">
     <h1><?= Html::encode($this->title) ?></h1>
 
+    <p>
+        <?= Html::a('Excel Raporu', array_merge(['export-excel'], Yii::$app->request->queryParams), [
+            'class' => 'btn btn-success',
+            'data-pjax' => '0',
+        ]) ?>
+        <?= Html::a('PDF Raporu', array_merge(['export-pdf'], Yii::$app->request->queryParams), [
+            'class' => 'btn btn-danger',
+            'data-pjax' => '0',
+        ]) ?>
+    </p>
+
     <?php
     Modal::begin([
         'id' => 'bgyslogs-modal',
@@ -39,9 +50,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format'=>'raw',
                 'value'=>function ($data)
                     {
-                        return @$data->logyapan->username;
+                        return $data->actor ?: @$data->logyapan->username;
                     }
             ], 
+            [
+                'attribute' => 'result',
+                'value' => function ($data) {
+                    return $data->result === 'failure' ? 'Başarısız' : 'Başarılı';
+                },
+                'filter' => ['success' => 'Başarılı', 'failure' => 'Başarısız'],
+            ],
+            'ip_address',
             [
                 'attribute'=>'date',
                 'format' => ['date', 'php:d/m/Y H:i:s'],

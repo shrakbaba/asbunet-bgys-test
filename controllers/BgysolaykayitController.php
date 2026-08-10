@@ -3,6 +3,8 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
+use app\components\SecureFileStorage;
 use app\models\Bgysolaykayit;
 use app\models\Bgysolaykayitbelge;
 use app\models\BgysolaykayitSearch;
@@ -115,6 +117,7 @@ class BgysolaykayitController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit');
         $maillistesi = bgys::mailGrubu('olayKaydi');
 
         $model->olaytarihi=$this->mysqlTarihiWebTarihineCevir($model->olaytarihi);
@@ -122,7 +125,6 @@ class BgysolaykayitController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
 
-            $model->userid=Yii::$app->user->identity->id;
             $model->olaytarihi=imdat::tomysqldate($model->olaytarihi);
             $model->mudahaletarihi=imdat::tomysqldate($model->mudahaletarihi);
 
@@ -153,21 +155,20 @@ class BgysolaykayitController extends Controller
 
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         //echo "<pre>";var_dump($this->findModel($id)->belge);exit;
-        $yol=Yii::$app->basePath .'/web/uploads/bgys/'.md5("olay")."/". $this->findModel($id)->belge;
-        //var_dump($yol);exit;
         try {
-            //echo "<pre>";var_dump($this->findModel($id));exit;
-            if ($this->findModel($id)->belge and file_exists($yol)) {
-                //echo 1;exit;
-                unlink($yol);
+            SecureFileStorage::delete($model->belge, 'events', [$this->legacyEventDirectory()]);
+            foreach ($model->belgeler as $belge) {
+                SecureFileStorage::delete($belge->dosya, 'events', [$this->legacyEventDirectory()]);
             }
-            //echo 2;exit;
 
-                        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay silindi','olay:'.$this->findModel($id)->konu );
-            $this->findModel($id)->delete();
+            bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay silindi','olay:'.$model->konu );
+            $model->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);
@@ -192,6 +193,7 @@ class BgysolaykayitController extends Controller
     { 
         $olayId = $i;
         if ($i) {
+            RecordAccess::assertCanManage($this->findModel($i), ['userid'], 'bgys_olay_kayit_belge');
                 //echo "<pre>";var_dump($this->findModel($i)->belge);exit;
             if ($this->findModel($i)->belge) {
 
@@ -201,14 +203,9 @@ class BgysolaykayitController extends Controller
                         
             // echo "<pre>";var_dump($model->validate());
             // echo "<pre>";var_dump($model->getErrors());exit; 
-                $a=Yii::$app->db->createCommand()
-                ->update('bgys_olay_kayit', ['belge'=>null], 'id='.$i)
-                ->execute();
-                if ($a) {
-                    $path = Yii::$app->basePath .'/web/uploads/bgys/'.md5("olay")."/". $belge;
-                    if (file_exists($path)) {
-                        unlink($path);
-                    }
+                $model->belge = null;
+                if ($model->save(false, ['belge'])) {
+                    SecureFileStorage::delete($belge, 'events', [$this->legacyEventDirectory()]);
                     bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay belgesi silindi','olay:'.$i);
                     Yii::$app->session->setFlash('success','Belge Silindi.');
                 }else
@@ -241,12 +238,13 @@ class BgysolaykayitController extends Controller
             throw new NotFoundHttpException('Belge bulunamadı.');
         }
 
-        $path = $this->olayBelgeYolu($model->belge);
-        if (!file_exists($path)) {
-            throw new NotFoundHttpException('Belge dosyası bulunamadı.');
+        if (!SecureFileStorage::exists($model->belge, 'events', [$this->legacyEventDirectory()])) {
+            throw new NotFoundHttpException('Belge kaydı mevcut ancak dosyanın kendisi bulunamadı. Belgeyi düzenleme ekranından yeniden yükleyin.');
         }
+        $path = SecureFileStorage::find($model->belge, 'events', [$this->legacyEventDirectory()]);
 
-        return Yii::$app->response->sendFile($path, $model->belge, [
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay belgesi görüntülendi', 'olay:' . $model->id);
+        return Yii::$app->response->sendFile($path, 'olay-belgesi-' . $model->id . '.pdf', [
             'mimeType' => 'application/pdf',
             'inline' => true,
         ]);
@@ -259,12 +257,13 @@ class BgysolaykayitController extends Controller
             throw new NotFoundHttpException('Belge bulunamadı.');
         }
 
-        $path = $this->olayBelgeYolu($belge->dosya);
-        if (!file_exists($path)) {
-            throw new NotFoundHttpException('Belge dosyası bulunamadı.');
+        if (!SecureFileStorage::exists($belge->dosya, 'events', [$this->legacyEventDirectory()])) {
+            throw new NotFoundHttpException('Belge kaydı mevcut ancak dosyanın kendisi bulunamadı. Belgeyi düzenleme ekranından yeniden yükleyin.');
         }
+        $path = SecureFileStorage::find($belge->dosya, 'events', [$this->legacyEventDirectory()]);
 
-        return Yii::$app->response->sendFile($path, $belge->orijinal_ad, [
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay ek belgesi görüntülendi', 'olay:' . $belge->olay_id . ';belge:' . $belge->id);
+        return Yii::$app->response->sendFile($path, $this->safeDownloadName($belge->orijinal_ad, $belge->id), [
             'mimeType' => 'application/pdf',
             'inline' => true,
         ]);
@@ -278,11 +277,9 @@ class BgysolaykayitController extends Controller
             return $this->redirect(['index']);
         }
 
+        RecordAccess::assertCanManage($belge->olay, ['userid'], 'bgys_olay_kayit_belge');
         $olayId = $belge->olay_id;
-        $path = $this->olayBelgeYolu($belge->dosya);
-        if (file_exists($path)) {
-            unlink($path);
-        }
+        SecureFileStorage::delete($belge->dosya, 'events', [$this->legacyEventDirectory()]);
         $belge->delete();
         bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay belgesi silindi','olay:'.$olayId);
         Yii::$app->session->setFlash('success','Belge silindi.');
@@ -315,44 +312,40 @@ class BgysolaykayitController extends Controller
             return ['success' => false, 'message' => 'Yüklenen dosya geçerli bir PDF dosyası değil.'];
         }
 
-        $klasor = Yii::getAlias('@env_dosya') ."bgys/".md5("olay")."/";
-        FileHelper::createDirectory($klasor);
-        $dosya = Yii::$app->security->generateRandomString().'.'.$file->extension;
-
         if ($belgeId) {
             $belge = Bgysolaykayitbelge::findOne($belgeId);
             if ($belge === null) {
                 return ['success' => false, 'message' => 'Belge bulunamadı.'];
             }
 
+            RecordAccess::assertCanManage($belge->olay, ['userid'], 'bgys_olay_kayit_belge');
             $olayId = $belge->olay_id;
-            $eskiYol = $this->olayBelgeYolu($belge->dosya);
-            if ($file->saveAs($klasor.$dosya)) {
-                if (file_exists($eskiYol)) {
-                    unlink($eskiYol);
-                }
-                $belge->dosya = $dosya;
-                $belge->orijinal_ad = $file->name;
-                $belge->created_at = date('Y-m-d H:i:s');
-                $belge->created_by = Yii::$app->user->identity->id;
-                $belge->save(false);
+            $eskiDosya = $belge->dosya;
+            $dosya = SecureFileStorage::storePdf($file, 'events');
+            $belge->dosya = $dosya;
+            $belge->orijinal_ad = $file->name;
+            $belge->created_at = date('Y-m-d H:i:s');
+            $belge->created_by = Yii::$app->user->identity->id;
+            if ($belge->save(false)) {
+                SecureFileStorage::delete($eskiDosya, 'events', [$this->legacyEventDirectory()]);
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay belgesi güncellendi','olay:'.$olayId);
                 return ['success' => true, 'reloadUrl' => \yii\helpers\Url::to(['update', 'id' => $olayId])];
             }
+            SecureFileStorage::delete($dosya, 'events');
         }
 
         if ($legacyId) {
             $model = $this->findModel($legacyId);
-            $eskiYol = $this->olayBelgeYolu($model->belge);
-            if ($file->saveAs($klasor.$dosya)) {
-                if ($model->belge && file_exists($eskiYol)) {
-                    unlink($eskiYol);
-                }
-                $model->belge = $dosya;
-                $model->save(false, ['belge']);
+            RecordAccess::assertCanManage($model, ['userid'], 'bgys_olay_kayit_belge');
+            $eskiDosya = $model->belge;
+            $dosya = SecureFileStorage::storePdf($file, 'events');
+            $model->belge = $dosya;
+            if ($model->save(false, ['belge'])) {
+                SecureFileStorage::delete($eskiDosya, 'events', [$this->legacyEventDirectory()]);
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'olay belgesi güncellendi','olay:'.$model->id);
                 return ['success' => true, 'reloadUrl' => \yii\helpers\Url::to(['update', 'id' => $model->id])];
             }
+            SecureFileStorage::delete($dosya, 'events');
         }
 
         return ['success' => false, 'message' => 'Belge güncellenemedi.'];
@@ -373,14 +366,8 @@ class BgysolaykayitController extends Controller
             return;
         }
 
-        $klasor = Yii::getAlias('@env_dosya') ."bgys/".md5("olay")."/";
-        FileHelper::createDirectory($klasor);
-
         if ($replaceLegacy && $model->belge) {
-            $eskiYol = $this->olayBelgeYolu($model->belge);
-            if (file_exists($eskiYol)) {
-                unlink($eskiYol);
-            }
+            SecureFileStorage::delete($model->belge, 'events', [$this->legacyEventDirectory()]);
             $model->belge = null;
             $model->save(false, ['belge']);
         }
@@ -391,29 +378,32 @@ class BgysolaykayitController extends Controller
         }
 
         foreach ($model->file as $file) {
-            $dosya = Yii::$app->security->generateRandomString().'.'.$file->extension;
-            if ($file->saveAs($klasor.$dosya)) {
-                $belge = $replaceBelge ?: new Bgysolaykayitbelge();
-                if ($replaceBelge) {
-                    $eskiYol = $this->olayBelgeYolu($replaceBelge->dosya);
-                    if (file_exists($eskiYol)) {
-                        unlink($eskiYol);
-                    }
-                }
-                $belge->olay_id = $model->id;
-                $belge->dosya = $dosya;
-                $belge->orijinal_ad = $file->name;
-                $belge->created_at = date('Y-m-d H:i:s');
-                $belge->created_by = Yii::$app->user->identity->id;
-                $belge->save(false);
-                $replaceBelge = null;
+            $dosya = SecureFileStorage::storePdf($file, 'events');
+            $belge = $replaceBelge ?: new Bgysolaykayitbelge();
+            $eskiDosya = $replaceBelge ? $replaceBelge->dosya : null;
+            $belge->olay_id = $model->id;
+            $belge->dosya = $dosya;
+            $belge->orijinal_ad = $file->name;
+            $belge->created_at = date('Y-m-d H:i:s');
+            $belge->created_by = Yii::$app->user->identity->id;
+            if ($belge->save(false)) {
+                SecureFileStorage::delete($eskiDosya, 'events', [$this->legacyEventDirectory()]);
+            } else {
+                SecureFileStorage::delete($dosya, 'events');
             }
+            $replaceBelge = null;
         }
     }
 
-    private function olayBelgeYolu($dosya)
+    private function legacyEventDirectory()
     {
-        return Yii::getAlias('@env_dosya') ."bgys/".md5("olay")."/".$dosya;
+        return Yii::$app->basePath . '/web/uploads/bgys/' . md5('olay');
+    }
+
+    private function safeDownloadName($originalName, $id)
+    {
+        $name = basename(str_replace(["\r", "\n"], '', (string)$originalName));
+        return $name !== '' ? $name : 'olay-belgesi-' . $id . '.pdf';
     }
 
     private function mysqlTarihiWebTarihineCevir($date)

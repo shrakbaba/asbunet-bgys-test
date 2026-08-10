@@ -28,7 +28,7 @@ class Bgysfirmabilgi extends \yii\db\ActiveRecord
     {
         return [
             [['firmaadi', 'yetkilikisi', 'telefon','faaliyet_alani'], 'required'],
-            [['tedarik_tipi'], 'integer'],
+            [['tedarik_tipi', 'created_by'], 'integer'],
             [['firmaadi', 'yetkilikisi', 'telefon','mail','belge'], 'string', 'max' => 255],
             [['file'],'file','skipOnEmpty'=>true,'extensions'=>'pdf','mimeTypes'=>['application/pdf'],'maxSize' => 1024 * 1024 * 1],  //max 1Mb
         ];
@@ -41,6 +41,7 @@ class Bgysfirmabilgi extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'created_by' => 'Oluşturan Kullanıcı',
             'firmaadi' => 'Tedarikçi Adı',
             'yetkilikisi' => 'Yetkili Kişi',
             'telefon' => 'Telefon',

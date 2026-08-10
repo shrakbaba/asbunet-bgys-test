@@ -48,7 +48,7 @@ use yii\helpers\Url;
                             ['label' => 'Tedarikçi Değerlendirme', 'url' => ['/bgysfirmadegerlendirme/index']],
                         ]
                     ],
-                    ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'desktop','label' => 'Envanter/Zimmet Yönetimi', 'url' => ['/envcihazliste/index']],
+                    ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'desktop','label' => 'Cihaz ve Zimmet Yönetimi', 'url' => ['/envcihazliste/index']],
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'file','label' => 'Listeler',
                         'items' => [
                             ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'file','label' => 'İş Sürekliliği ve Kritik Süreçler', 'url' => ['/bgyskritiksurecler/index']],
@@ -60,7 +60,7 @@ use yii\helpers\Url;
                     ],
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'recycle','label' => 'Varlık Yönetimi',
                         'items' => [
-                            ['label' => 'Varlık Envanteri', 'url' => ['/bgysvarlikenvanteri/index']],
+                            ['label' => 'BGYS Varlık Envanteri', 'url' => ['/bgysvarlikenvanteri/index']],
                         ]
                     ], 
                     ['visible' => Yii::$app->user->can('BGYS_Ekip_Uyesi'),'icon' => 'recycle','label' => 'Risk Yönetimi',

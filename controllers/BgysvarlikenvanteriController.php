@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysvarlikenvanteri;
 use app\models\BgysvarlikenvanteriSearch;
 use yii\web\Controller;
@@ -83,9 +84,10 @@ class BgysvarlikenvanteriController extends Controller
 
     public function actionView($id)
     {
-        return $this->renderAjax('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $viewParams = ['model' => $this->findModel($id)];
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('view', $viewParams)
+            : $this->render('view', $viewParams);
     }
 
     public function actionCreate()
@@ -93,6 +95,7 @@ class BgysvarlikenvanteriController extends Controller
         $model = new Bgysvarlikenvanteri();
 
         if ($model->load(Yii::$app->request->post())) {
+            $model->created_by = Yii::$app->user->id;
             $model->varlik_degeri=round(($model->gizlilik+$model->erisilebilirlik+$model->butunluk)/3);
            
             if ($model->save()) {
@@ -112,6 +115,7 @@ class BgysvarlikenvanteriController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['created_by', 'owner_user_id'], 'bgys_varlik_envanteri');
 
         if ($model->load(Yii::$app->request->post())) {
             $model->varlik_degeri=round(($model->gizlilik+$model->erisilebilirlik+$model->butunluk)/3);
@@ -126,14 +130,16 @@ class BgysvarlikenvanteriController extends Controller
             }
         }
 
-        return $this->renderAjax('update', [
-            'model' => $model,
-        ]);
+        $viewParams = ['model' => $model];
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('update', $viewParams)
+            : $this->render('update', $viewParams);
     }
 
     public function actionDelete($id)
     {
             $model=$this->findModel($id);
+            RecordAccess::assertCanManage($model, ['created_by', 'owner_user_id'], 'bgys_varlik_envanteri');
             //if ( !imdat::difformonaydurumu($model->id)) {
                 $connection = Yii::$app->db;
                 $transaction = $connection->beginTransaction();

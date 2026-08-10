@@ -30,6 +30,7 @@ use app\models\Bgysfirmadegerlendirme;
 use app\models\Yenihostbildir;
 use app\models\Bgysfarkindalikegitim;
 use app\models\Bgysfarkindalikquiz;
+use app\components\LoginRateLimiter;
 
 
 class SiteController extends Controller
@@ -37,12 +38,19 @@ class SiteController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'logout' => ['POST'],
+                    'vcenter' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index','login','contact','about','vcenter'],
+                        'actions' => ['index','login','contact','about','vcenter','error','captcha'],
                         'roles' => [],
                     ],
                     [
@@ -96,35 +104,31 @@ class SiteController extends Controller
 
     public function actionVcenter()
     {
-        if(Yii::$app->request->post()){
-            $ip=Yii::$app->getRequest()->getUserIP();
-            $a=Yii::$app->request->post();
-            $beklenenAnahtar = Yii::$app->params['vcenterWebhookKey'] ?? '';
-            $gelenAnahtar = Yii::$app->request->headers->get('X-BGYS-Webhook-Key', Yii::$app->request->post('key', ''));
-            $beklenenIp = Yii::$app->params['vcenterWebhookIp'] ?? '10.0.31.20';
-            //echo"<pre>";var_dump($a);
-            if ($beklenenAnahtar === '' || $gelenAnahtar === '' || !hash_equals($beklenenAnahtar, $gelenAnahtar) || $ip !== $beklenenIp) {
-                Yii::warning('Yetkisiz vCenter webhook isteği: ' . $ip, 'security');
-                throw new \yii\web\ForbiddenHttpException('Yetkisiz webhook isteği.');
-            }
+        $ip=Yii::$app->getRequest()->getUserIP();
+        $a=Yii::$app->request->post();
+        $beklenenAnahtar = Yii::$app->params['vcenterWebhookKey'] ?? '';
+        $gelenAnahtar = Yii::$app->request->headers->get('X-BGYS-Webhook-Key', Yii::$app->request->post('key', ''));
+        $beklenenIp = Yii::$app->params['vcenterWebhookIp'] ?? '10.0.31.20';
+        if ($beklenenAnahtar === '' || $gelenAnahtar === '' || !hash_equals($beklenenAnahtar, $gelenAnahtar) || $ip !== $beklenenIp) {
+            Yii::warning('Yetkisiz vCenter webhook isteği: ' . $ip, 'security');
+            throw new \yii\web\ForbiddenHttpException('Yetkisiz webhook isteği.');
+        }
 
-            if (isset($a['vm'])) {
-                $model = new Yenihostbildir();
-                //$model->json=$ip;
-                $model->json=json_encode($a);
-                $model->zabbix=0;
-                $model->kaspersky=0;
-                $model->ipmanage=0;
-                $model->paloalto=0;
-                $model->vm_name=$a['vm'];
+        if (isset($a['vm'])) {
+            $model = new Yenihostbildir();
+            $model->json=json_encode($a);
+            $model->zabbix=0;
+            $model->kaspersky=0;
+            $model->ipmanage=0;
+            $model->paloalto=0;
+            $model->vm_name=$a['vm'];
 
-                if ($model->save()) {
-                    bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,1,'Vcenter trigger',$a['vm'].' vm created');
+            if ($model->save()) {
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,1,'Vcenter trigger',$a['vm'].' vm created');
 
-                    $maillistesi=bgys::mailGrubu('yeniVm');
-                    bgys::yenivm($maillistesi, $a['vm']);
+                $maillistesi=bgys::mailGrubu('yeniVm');
+                bgys::yenivm($maillistesi, $a['vm']);
 
-                }
             }
         }
     }
@@ -132,24 +136,38 @@ class SiteController extends Controller
     public function actionIndex()
     {
         if (!Yii::$app->user->isGuest) {
+            if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
+                return $this->redirect(['/site/dashboard']);
+            }
+
             return $this->render('index');
         }
         $model = new LoginForm();
 
         if ($model->load(Yii::$app->request->post()) ) {
 
-            if ($model->login()) {
+            $loginAllowed = $this->loginAllowed($model);
+            if ($loginAllowed && $model->login()) {
                 //echo ";adsda";exit;
                 //echo "asdsadwqeqead234as";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
-                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','', [
+                    'record_type' => 'authentication',
+                ]);
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi') ) {
                     //echo "yetkivar";exit;
-                    return $this->redirect('dashboard');                
+                    return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }
-            }  
+            }
+            if ($loginAllowed) {
+                bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                    'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+                    'result' => 'failure',
+                    'record_type' => 'authentication',
+                ]);
+            }
         }
         return $this->render('login', [
             'model' => $model,
@@ -160,22 +178,36 @@ class SiteController extends Controller
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
-           return $this->goHome();
+            if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
+                return $this->redirect(['/site/dashboard']);
+            }
+
+            return $this->goHome();
         }
         $model = new LoginForm();
 
         if ($model->load(Yii::$app->request->post()) ) {
-            if ($model->login()) {
+            $loginAllowed = $this->loginAllowed($model);
+            if ($loginAllowed && $model->login()) {
                 //echo ";adsda";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
-                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','' );
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','', [
+                    'record_type' => 'authentication',
+                ]);
                 //return $this->goBack();
                 if (Yii::$app->user->can('BGYS_Ekip_Uyesi')) {
-                    return $this->redirect('dashboard');                
+                    return $this->redirect(['/site/dashboard']);
                 }else{
                     return $this->redirect('/site/index');
                 }
-            }  
+            }
+            if ($loginAllowed) {
+                bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                    'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+                    'result' => 'failure',
+                    'record_type' => 'authentication',
+                ]);
+            }
         }
         return $this->render('login', [
             'model' => $model,
@@ -184,9 +216,30 @@ class SiteController extends Controller
 
     public function actionLogout()
     {
-        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cikis yapti','' );
+        bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'cikis yapti','', [
+            'record_type' => 'authentication',
+        ]);
         Yii::$app->user->logout();
         return $this->goHome();
+    }
+
+    private function loginAllowed(LoginForm $model)
+    {
+        $limiter = new LoginRateLimiter(
+            Yii::$app->params['loginMaxAttempts'] ?? 5,
+            Yii::$app->params['loginWindowSeconds'] ?? 900
+        );
+        if ($limiter->isAllowed($model->username, Yii::$app->request->getUserIP())) {
+            return true;
+        }
+
+        $model->addError('password', 'Çok fazla başarısız giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin.');
+        bgys::logtut($this->id, $this->action->id, null, 'giriş geçici olarak engellendi', '', [
+            'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+            'result' => 'failure',
+            'record_type' => 'authentication',
+        ]);
+        return false;
     }
 
     public function actionContact()

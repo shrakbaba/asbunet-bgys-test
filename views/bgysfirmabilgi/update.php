@@ -8,6 +8,8 @@ use yii\helpers\Html;
 ?>
 <div class="firmabilgi-update">
 
+    <p><?= Html::a('Tedarikçi Listesine Dön', ['index'], ['class' => 'btn btn-default']) ?></p>
+
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>

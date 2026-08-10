@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysyedeklemelistesi;
 use app\models\BgysyedeklemelistesiSearch;
 use yii\web\Controller;
@@ -80,6 +81,7 @@ class BgysyedeklemelistesiController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_yedekleme_listesi');
         if ($model->load(Yii::$app->request->post())){            
             if ( $model->save()) {
                 return $this->redirect(['index']);
@@ -93,11 +95,14 @@ class BgysyedeklemelistesiController extends Controller
 
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['sorumlu'], 'bgys_yedekleme_listesi');
+
         $connection = Yii::$app->db;
         $transaction = $connection->beginTransaction();
         try {
             //bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'marka silindi','marka:'.$this->findModel($id)->marka );
-            $this->findModel($id)->delete();
+            $model->delete();
             $transaction->commit();
             Yii::$app->session->setFlash('success','Silme işlemi başarılı.');
             return $this->redirect(['index']);

@@ -10,6 +10,7 @@ use kartik\select2\Select2;
 use kartik\file\FileInput;
 use app\models\Userbilgi;
 use app\models\Userdb;
+use app\components\SecureFileStorage;
 /* @var $this yii\web\View */
 /* @var $model app\models\Olaykayit */
 /* @var $form yii\widgets\ActiveForm */
@@ -78,11 +79,12 @@ use app\models\Userdb;
             <div>
                 <?php if($model->belge) { ?>
                     <div style="margin-bottom:6px">
-                        <?= Html::a($model->belge, ['pdfgoster', 'id' => $model->id], [
+                        <?php $legacyBelgeMevcut = SecureFileStorage::exists($model->belge, 'events', [Yii::$app->basePath . '/web/uploads/bgys/' . md5('olay')]); ?>
+                        <?= $legacyBelgeMevcut ? Html::a(Html::encode($model->belge), ['pdfgoster', 'id' => $model->id], [
                             'target' => '_blank',
                             'style' => 'color:#337ab7;text-decoration:underline;',
                             'onclick' => "window.open(this.href, '_blank'); return false;",
-                        ]) ?>
+                        ]) : Html::tag('span', 'Belge dosyası eksik – Güncelle ile yeniden yükleyin.', ['class' => 'text-danger']) ?>
                         <?= Html::button('<span class="glyphicon glyphicon-remove"></span>', [
                             'class' => 'btn btn-danger btn-xs',
                             'title' => 'Belgeyi Sil',
@@ -95,11 +97,12 @@ use app\models\Userdb;
 
                 <?php foreach ($model->belgeler as $belge) { ?>
                     <div style="margin-bottom:6px">
-                        <?= Html::a(Html::encode($belge->orijinal_ad), ['belgegoster', 'id' => $belge->id], [
+                        <?php $ekBelgeMevcut = SecureFileStorage::exists($belge->dosya, 'events', [Yii::$app->basePath . '/web/uploads/bgys/' . md5('olay')]); ?>
+                        <?= $ekBelgeMevcut ? Html::a(Html::encode($belge->orijinal_ad), ['belgegoster', 'id' => $belge->id], [
                             'target' => '_blank',
                             'style' => 'color:#337ab7;text-decoration:underline;',
                             'onclick' => "window.open(this.href, '_blank'); return false;",
-                        ]) ?>
+                        ]) : Html::tag('span', Html::encode($belge->orijinal_ad) . ': dosya eksik – Güncelle ile yeniden yükleyin.', ['class' => 'text-danger']) ?>
                         <?= Html::button('<span class="glyphicon glyphicon-remove"></span>', [
                             'class' => 'btn btn-danger btn-xs',
                             'title' => 'Belgeyi Sil',

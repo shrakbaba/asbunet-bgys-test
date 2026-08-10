@@ -28,16 +28,85 @@ class bgys
 		}
 	}
 
-	public static function logtut($controller,$action,$userid,$islem,$not)
+	public static function logtut($controller,$action,$userid,$islem,$not,array $context = [])
 	{
-		//echo ($controller."  ".$action."   ".$userid."   ".$not);exit;
 		$model = new Bgyslogs();
 		$model->controller=$controller;
 		$model->action=$action;
-		$model->userid=intval($userid);
+		$model->userid=$userid === null || $userid === '' ? null : intval($userid);
 		$model->islem=($islem);
 		$model->not=$not;
-		$model->save();
+		$model->actor=self::auditActor($context, $model->userid);
+		$model->role=self::auditRoles($model->userid);
+		$model->ip_address=Yii::$app instanceof \yii\web\Application ? Yii::$app->request->getUserIP() : null;
+		$model->user_agent=Yii::$app instanceof \yii\web\Application ? mb_substr((string)Yii::$app->request->userAgent, 0, 512) : null;
+		$model->correlation_id=self::auditCorrelationId();
+		$model->result=in_array(($context['result'] ?? 'success'), ['success', 'failure'], true) ? ($context['result'] ?? 'success') : 'failure';
+		$model->record_type=$context['record_type'] ?? null;
+		$model->record_id=isset($context['record_id']) ? (string)$context['record_id'] : null;
+		$model->old_values=self::auditJson($context['old_values'] ?? null);
+		$model->new_values=self::auditJson($context['new_values'] ?? null);
+		if (!$model->save()) {
+			Yii::error('Audit kaydı yazılamadı: ' . json_encode($model->getErrors(), JSON_UNESCAPED_UNICODE), 'audit');
+		}
+	}
+
+	private static function auditActor(array $context, $userId)
+	{
+		if (isset($context['actor'])) {
+			return mb_substr(trim((string)$context['actor']), 0, 255);
+		}
+		if ($userId && !Yii::$app->user->isGuest && Yii::$app->user->identity) {
+			return mb_substr((string)Yii::$app->user->identity->username, 0, 255);
+		}
+		return null;
+	}
+
+	private static function auditRoles($userId)
+	{
+		if (!$userId || !Yii::$app->authManager) {
+			return null;
+		}
+		return mb_substr(implode(',', array_keys(Yii::$app->authManager->getRolesByUser($userId))), 0, 255);
+	}
+
+	private static function auditCorrelationId()
+	{
+		static $correlationId;
+		if ($correlationId !== null) {
+			return $correlationId;
+		}
+		$incoming = Yii::$app instanceof \yii\web\Application
+			? (string)Yii::$app->request->headers->get('X-Correlation-ID', '')
+			: '';
+		$correlationId = preg_match('/^[A-Za-z0-9._-]{8,64}$/', $incoming)
+			? $incoming
+			: Yii::$app->security->generateRandomString(32);
+		return $correlationId;
+	}
+
+	private static function auditJson($value)
+	{
+		if ($value === null) {
+			return null;
+		}
+		$masked = self::maskAuditSecrets($value);
+		return json_encode($masked, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	}
+
+	private static function maskAuditSecrets($value)
+	{
+		if (!is_array($value)) {
+			return $value;
+		}
+		foreach ($value as $key => $item) {
+			if (preg_match('/password|parola|passwd|secret|token|api.?key|pin/i', (string)$key)) {
+				$value[$key] = '[MASKED]';
+			} else {
+				$value[$key] = self::maskAuditSecrets($item);
+			}
+		}
+		return $value;
 	}
 	public static function Olcmesorumlumu($id)
 	{
@@ -77,7 +146,7 @@ class bgys
 	public static function varlikdegeri($id)
 	{
 	  $degerler = array(1 =>"Düşük" ,2=>"Orta",3=>'Yüksek',4=>'Çok Yüksek');
-	  return $degerler[$id];
+	  return $degerler[$id] ?? 'Belirtilmemiş';
 	}
 
 	public static function tedarikcitipi($id)

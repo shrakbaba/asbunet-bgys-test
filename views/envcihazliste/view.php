@@ -36,6 +36,30 @@ echo DetailView::widget([
         ],
         'adet',
         [
+            'attribute' => 'bgys_asset_id',
+            'value' => $model->bgysAsset ? $model->bgysAsset->varlik_adi : '(Bağlı değil)',
+        ],
+        [
+            'attribute' => 'license_type',
+            'value' => \app\models\Envcihazliste::licenseTypeOptions()[$model->license_type] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        ['attribute' => 'license_quantity', 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'license_start_date', 'format' => ['date', 'php:d/m/Y'], 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'license_end_date', 'format' => ['date', 'php:d/m/Y'], 'visible' => $model->isSoftwareType()],
+        [
+            'attribute' => 'hosting_environment',
+            'value' => \app\models\Envcihazliste::hostingEnvironmentOptions()[$model->hosting_environment] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        ['attribute' => 'hosting_detail', 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'supplier_name', 'visible' => $model->isSoftwareType()],
+        [
+            'attribute' => 'lifecycle_status',
+            'value' => \app\models\Envcihazliste::lifecycleStatusOptions()[$model->lifecycle_status] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        [
             'attribute' => 'alim_tarihi',
             'format' => ['date', 'php:d/m/Y']
         ], 'duyuru6',
@@ -76,16 +100,51 @@ echo DetailView::widget([
                 'valueColOptions' => ['style' => 'height: 85%'],
             ]  ,
             [
-            'attribute'=>'zimmet',
-            'format'=>'raw',
+                'attribute'=>'zimmet',
+                'format'=>'raw',
             //'value'=> @$model->zimmet0->ad." ".@$model->zimmet0->soyad
             'value'=>  Yii::$app->params['giristipi']==1 ? @Userbilgi::findOne(['kisi_id'=>$model->zimmet])->ad.' '.@Userbilgi::findOne(['kisi_id'=>$model->zimmet])->soyad.' / '.@$model->zimmet0->username : @$model->zimmet0->ad." ".@$model->zimmet0->soyad." ".@$model->zimmet0->username 
-            ],    
+            ],
+            [
+                'attribute' => 'dosya',
+                'label' => 'Alım Belgesi',
+                'format' => 'raw',
+                'value' => $model->dosya
+                    ? Html::a('Belgeyi İndir', ['/envcihazliste/download', 'id' => $model->id], [
+                        'class' => 'btn btn-info btn-sm',
+                        'target' => '_blank',
+                        'data-pjax' => '0',
+                    ])
+                    : '<span class="text-muted">Belge yüklenmemiş</span>',
+            ],
     ]
     
 ]); ?>
-<?php if ($model->dosya) {      ?>
-                        <span class="btn btn-info col-md-2" onclick="window.open('/uploads/bgys/<?php echo md5("cihaz")."/".$model->dosya ?>')" style="margin: 10px;color:white">Belge</span>
-                <?php } ?>
 
+<h4>Zimmet Geçmişi</h4>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Kullanıcı</th>
+                <th>Teslim Tarihi</th>
+                <th>İade Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php if ($model->zimmetHistory) { ?>
+            <?php foreach ($model->zimmetHistory as $assignment) { ?>
+                <?php $userInfo = Userbilgi::findOne(['kisi_id' => $assignment->user_id]); ?>
+                <tr>
+                    <td><?= Html::encode($userInfo ? trim($userInfo->ad . ' ' . $userInfo->soyad) : 'Kullanıcı #' . $assignment->user_id) ?></td>
+                    <td><?= Yii::$app->formatter->asDatetime($assignment->teslim_tarihi, 'php:d/m/Y H:i') ?></td>
+                    <td><?= $assignment->iade_tarihi ? Yii::$app->formatter->asDatetime($assignment->iade_tarihi, 'php:d/m/Y H:i') : 'Aktif' ?></td>
+                </tr>
+            <?php } ?>
+        <?php } else { ?>
+            <tr><td colspan="3">Zimmet geçmişi bulunmuyor.</td></tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</div>
 </div>

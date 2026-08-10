@@ -77,6 +77,7 @@ class EnvmarkaController extends Controller
         $model = new Envmarka();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->syncDeviceTypes($model);
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'marka tanımlandı','marka:'.$model->marka );
             //return $this->redirect(['view', 'id' => $model->id]);
             return $this->redirect(['index']);
@@ -92,6 +93,7 @@ class EnvmarkaController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->syncDeviceTypes($model);
             bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'marka guncellendi','marka:'.$model->marka );
            // return $this->redirect(['view', 'id' => $model->id]);
             return $this->redirect(['index']);
@@ -137,5 +139,22 @@ class EnvmarkaController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    private function syncDeviceTypes(Envmarka $model)
+    {
+        $usedTypeIds = (new \yii\db\Query())->select('cihaz_turu_id')->distinct()->from('env_cihaz_liste')
+            ->where(['marka_id' => $model->id])->column();
+        $model->cihaz_turu_ids = array_unique(array_merge((array)$model->cihaz_turu_ids, $usedTypeIds));
+        Yii::$app->db->createCommand()->delete('env_cihaz_turu_marka', ['marka_id' => $model->id])->execute();
+        $rows = [];
+        foreach (array_unique(array_map('intval', (array)$model->cihaz_turu_ids)) as $typeId) {
+            if ($typeId > 0) {
+                $rows[] = [$typeId, $model->id];
+            }
+        }
+        if ($rows) {
+            Yii::$app->db->createCommand()->batchInsert('env_cihaz_turu_marka', ['cihaz_turu_id', 'marka_id'], $rows)->execute();
+        }
     }
 }

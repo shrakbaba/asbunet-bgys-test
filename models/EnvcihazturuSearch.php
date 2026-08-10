@@ -19,7 +19,7 @@ class EnvcihazturuSearch extends Envcihazturu
     {
         return [
             [['id'], 'integer'],
-            [['cihaz_turu'], 'safe'],
+            [['cihaz_turu', 'asset_type'], 'safe'],
         ];
     }
 
@@ -63,6 +63,7 @@ class EnvcihazturuSearch extends Envcihazturu
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'asset_type' => $this->asset_type,
         ]);
 
         $query->andFilterWhere(['like', 'cihaz_turu', $this->cihaz_turu]);

@@ -14,6 +14,10 @@ use yii\widgets\DetailView;
         'attributes' => [
            // 'id',
             'cihaz_turu',
+            [
+                'attribute' => 'asset_type',
+                'value' => \app\models\Bgysvarlikenvanteri::assetTypeOptions()[$model->asset_type] ?? 'Sınıflandırılmamış',
+            ],
         ],
     ]) ?>
 

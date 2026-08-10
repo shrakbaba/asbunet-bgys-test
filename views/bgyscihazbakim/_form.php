@@ -76,7 +76,7 @@ use dosamigos\datepicker\DatePicker;
                                'pluginOptions'=>
                                     $model->sozlesme ? [
                                         'initialPreview'=>[
-                                            "/uploads/bgys/".md5("bakim")."/".$model->sozlesme,
+                                            \yii\helpers\Url::to(['/bgyscihazbakim/download', 'id' => $model->id, 'type' => 'contract']),
                                         ],
                                         'initialPreviewFileType' => 'pdf',
                                         'initialPreviewAsData'=>true,

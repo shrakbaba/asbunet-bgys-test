@@ -58,10 +58,10 @@ AppAsset::register($this);
                             ['label' => 'Dif Talep', 'url' => ['/bgysdiftalep/index']],
                             ]];    
                         $menuItems[] = ['label' => 'Varlık ve Risk','items' => [
-                            ['label' => 'Varlık', 'url' => ['/bgysvarlikenvanteri/index']],
+                            ['label' => 'BGYS Varlık Envanteri', 'url' => ['/bgysvarlikenvanteri/index']],
                             ['label' => 'Risk', 'url' => ['/bgysrisk/index']],
                             ]];
-                        $menuItems[] = ['label' => 'Envanter', 'url' => ['/envcihazliste/index']] ;
+                        $menuItems[] = ['label' => 'Cihaz ve Zimmet Yönetimi', 'url' => ['/envcihazliste/index']] ;
                         $menuItems[] = ['label' => 'Tanımlamalar','items' => [
                             ['label' => 'Kategoriler', 'url' => ['/bgyskategori/index']],
                             ['label' => 'Şiddet Tablosu', 'url' => ['/bgyssiddettablosu/index']],

@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\web\UploadedFile;
+use yii\helpers\Url;
 
 class Bgysfarkindalikegitim extends \yii\db\ActiveRecord
 {
@@ -76,12 +77,12 @@ class Bgysfarkindalikegitim extends \yii\db\ActiveRecord
 
     public function getVideoUrl()
     {
-        return '/uploads/bgys/egitim/' . $this->video_dosya;
+        return Url::to(['/bgysfarkindalikquiz/video', 'id' => $this->id]);
     }
 
     public function getQuizUrl()
     {
-        return $this->quiz_dosya ? '/uploads/bgys/egitim/quiz/' . $this->quiz_dosya : null;
+        return $this->quiz_dosya ? Url::to(['/bgysfarkindalikquiz/quizfile', 'id' => $this->id]) : null;
     }
 
     public static function varsayilanQuizJson()

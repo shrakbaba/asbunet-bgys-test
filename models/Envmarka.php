@@ -15,6 +15,7 @@ use Yii;
  */
 class Envmarka extends \yii\db\ActiveRecord
 {
+    public $cihaz_turu_ids = [];
     /**
      * {@inheritdoc}
      */
@@ -32,6 +33,7 @@ class Envmarka extends \yii\db\ActiveRecord
             [['marka'], 'required'],
             [['marka'], 'string', 'max' => 255],
             [['marka'], 'unique'],
+            [['cihaz_turu_ids'], 'each', 'rule' => ['integer']],
         ];
     }
 
@@ -60,5 +62,17 @@ class Envmarka extends \yii\db\ActiveRecord
     public function getEnvModels()
     {
         return $this->hasMany(Envmodel::className(), ['marka_id' => 'id']);
+    }
+
+    public function getCihazTurleri()
+    {
+        return $this->hasMany(Envcihazturu::className(), ['id' => 'cihaz_turu_id'])
+            ->viaTable('env_cihaz_turu_marka', ['marka_id' => 'id']);
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        $this->cihaz_turu_ids = $this->getCihazTurleri()->select('env_cihaz_turu.id')->column();
     }
 }

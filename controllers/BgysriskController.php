@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysrisk;
 use app\models\BgysriskSearch;
 use app\models\Bgysriskkabul;
@@ -48,7 +49,10 @@ class BgysriskController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['riskkabul','riskkabulview','riskkabulupdate','riskkabuldelete'],
-                        'roles' => ['BGYS_Yonetim_Temsilcisi'],
+                        'roles' => ['@'],
+                        'matchCallback' => function () {
+                            return RecordAccess::hasDirectRole('BGYS_Yonetim_Temsilcisi');
+                        },
                     ],
                     [
                       'allow' => false,
@@ -96,9 +100,10 @@ class BgysriskController extends Controller
             : $this->render('view', $params);
     }
 
- public function actionPasif($id)
-{
-    $model = $this->findModel($id);
+    public function actionPasif($id)
+    {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['risk_sorumlusu'], 'bgys_risk');
 
     // Form POST geldiyse:
     if (Yii::$app->request->isPost) {
@@ -180,6 +185,7 @@ class BgysriskController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['risk_sorumlusu'], 'bgys_risk');
 
         if ($model->load(Yii::$app->request->post())) {
 
@@ -250,6 +256,7 @@ class BgysriskController extends Controller
     public function actionDelete($id)
     {
         $model=$this->findModel($id);
+        RecordAccess::assertCanManage($model, ['risk_sorumlusu'], 'bgys_risk');
             $connection = Yii::$app->db;
             $transaction = $connection->beginTransaction();
             try {
@@ -275,8 +282,9 @@ class BgysriskController extends Controller
     }
 
     public function actionAktif($id)
-{
-    $model = $this->findModel($id);
+    {
+        $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['risk_sorumlusu'], 'bgys_risk');
 
     // aktif alanını 1 yap
     $model->updateAttributes(['aktif' => 1]);

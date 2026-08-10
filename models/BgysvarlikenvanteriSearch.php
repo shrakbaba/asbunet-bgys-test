@@ -12,14 +12,15 @@ use app\models\Bgysvarlikenvanteri;
  */
 class BgysvarlikenvanteriSearch extends Bgysvarlikenvanteri
 {
+    public $needs_completion;
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'bilgi_sinifi', 'kategori', 'gizlilik', 'butunluk', 'erisilebilirlik', 'varlik_degeri'], 'integer'],
-            [['departman', 'varlik_adi', 'lokasyon', 'varlik_sahibi','aciklama'], 'safe'],
+            [['id', 'bilgi_sinifi', 'kategori', 'gizlilik', 'butunluk', 'erisilebilirlik', 'varlik_degeri', 'needs_completion'], 'integer'],
+            [['departman', 'varlik_adi', 'lokasyon', 'varlik_sahibi', 'aciklama', 'asset_type'], 'safe'],
         ];
     }
 
@@ -70,12 +71,20 @@ class BgysvarlikenvanteriSearch extends Bgysvarlikenvanteri
             'butunluk' => $this->butunluk,
             'erisilebilirlik' => $this->erisilebilirlik,
             'varlik_degeri' => $this->varlik_degeri,
+            'asset_type' => $this->asset_type,
         ]);
 
         $query->andFilterWhere(['like', 'departman', $this->departman])
             ->andFilterWhere(['like', 'varlik_adi', $this->varlik_adi])
             ->andFilterWhere(['like', 'lokasyon', $this->lokasyon])
             ->andFilterWhere(['like', 'varlik_sahibi', $this->varlik_sahibi]);
+
+        if ($this->needs_completion) {
+            $query->andWhere(['not', ['source_device_id' => null]])->andWhere(['or',
+                ['departman' => null], ['bilgi_sinifi' => null], ['lokasyon' => null],
+                ['gizlilik' => null], ['butunluk' => null], ['erisilebilirlik' => null], ['varlik_degeri' => null],
+            ]);
+        }
 
         return $dataProvider;
     }

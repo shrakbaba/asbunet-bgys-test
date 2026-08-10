@@ -5,6 +5,7 @@ use yii\widgets\DetailView;
 use yii\helpers\ArrayHelper;
 use app\models\Bgysbilgisinifi;
 use yii\helpers\bgys;
+use app\models\Bgysvarlikenvanteri;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgysvarlikenvanteri */
@@ -16,22 +17,26 @@ use yii\helpers\bgys;
         'attributes' => [
             //'id',
             'varlik_adi',           
+            [
+                'attribute' => 'asset_type',
+                'value' => Bgysvarlikenvanteri::assetTypeOptions()[$model->asset_type] ?? $model->asset_type,
+            ],
                        
             [
                 'attribute'=>'departman',
-                'value'=>$model->departman0->departman,
+                'value'=>$model->departman0 ? $model->departman0->departman : 'Belirtilmemiş',
             ],           
             [
                 'attribute'=>'lokasyon',
-                'value'=>$model->lokasyon0->lokasyon,
+                'value'=>$model->lokasyon0 ? $model->lokasyon0->lokasyon : 'Belirtilmemiş',
             ],
             [
                 'attribute'=>'bilgi_sinifi',
-                'value'=>$model->bilgiSinifi->adi,
+                'value'=>$model->bilgiSinifi ? $model->bilgiSinifi->adi : 'Belirtilmemiş',
             ],                    
             [
                 'attribute'=>'kategori',
-                'value'=>$model->kategori0->adi,
+                'value'=>$model->kategori0 ? $model->kategori0->adi : 'Belirtilmemiş',
             ],
             'varlik_sahibi',                                
             [

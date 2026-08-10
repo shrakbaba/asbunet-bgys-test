@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\RecordAccess;
 use app\models\Bgysfirmadegerlendirme;
 use app\models\BgysfirmadegerlendirmeSearch;
 use yii\web\Controller;
@@ -26,6 +27,8 @@ class BgysfirmadegerlendirmeController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                    'onay' => ['POST'],
+                    'onaykaldir' => ['POST'],
                 ],
             ],
             'access' => [
@@ -164,6 +167,7 @@ class BgysfirmadegerlendirmeController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        RecordAccess::assertCanManage($model, ['degerlendiren'], 'bgys_firma_degerlendirme');
         if (!$model->onay) {
        
             $model->scenario = 'update';
@@ -207,6 +211,7 @@ class BgysfirmadegerlendirmeController extends Controller
     public function actionDelete($id)
     {
         $model=$this->findModel($id);
+        RecordAccess::assertCanManage($model, ['degerlendiren'], 'bgys_firma_degerlendirme');
         if (!$model->onay) {
             $connection = Yii::$app->db;
             $transaction = $connection->beginTransaction();

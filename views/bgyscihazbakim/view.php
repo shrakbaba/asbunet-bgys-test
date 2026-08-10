@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php if ($model->sozlesme ) {      ?>
             <p>
                 <strong>Cihaz Sözleşmesi:</strong>
-                <?= Html::a($model->sozlesme, ['/uploads/bgys/'.md5("bakim").'/'.$model->sozlesme], ['target'=>'_blank']) ?>
+                <?= Html::a('Sözleşmeyi İndir', ['download', 'id' => $model->id, 'type' => 'contract'], ['target'=>'_blank']) ?>
             </p>
             <?php } ?>
 
@@ -63,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 
                 echo '<p><strong>Bakım Formları:</strong></p><ul>';
                 foreach (@$model->bakimformlari as $key => $value) { ?>
-                <li><?= Html::a($value, ['/uploads/bgys/'.md5("bakim").'/'.$value], ['target'=>'_blank']) ?></li>
+                <li><?= Html::a('Bakım Formu ' . ($key + 1), ['download', 'id' => $model->id, 'type' => 'form', 'index' => $key], ['target'=>'_blank']) ?></li>
 
                 <?php        }
                 echo '</ul>';
