@@ -238,6 +238,9 @@ class BgysolaykayitController extends Controller
             throw new NotFoundHttpException('Belge bulunamadı.');
         }
 
+        if (!SecureFileStorage::exists($model->belge, 'events', [$this->legacyEventDirectory()])) {
+            throw new NotFoundHttpException('Belge kaydı mevcut ancak dosyanın kendisi bulunamadı. Belgeyi düzenleme ekranından yeniden yükleyin.');
+        }
         $path = SecureFileStorage::find($model->belge, 'events', [$this->legacyEventDirectory()]);
 
         bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay belgesi görüntülendi', 'olay:' . $model->id);
@@ -254,6 +257,9 @@ class BgysolaykayitController extends Controller
             throw new NotFoundHttpException('Belge bulunamadı.');
         }
 
+        if (!SecureFileStorage::exists($belge->dosya, 'events', [$this->legacyEventDirectory()])) {
+            throw new NotFoundHttpException('Belge kaydı mevcut ancak dosyanın kendisi bulunamadı. Belgeyi düzenleme ekranından yeniden yükleyin.');
+        }
         $path = SecureFileStorage::find($belge->dosya, 'events', [$this->legacyEventDirectory()]);
 
         bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay ek belgesi görüntülendi', 'olay:' . $belge->olay_id . ';belge:' . $belge->id);

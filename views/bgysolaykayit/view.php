@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use app\components\SecureFileStorage;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Olaykayit */
@@ -56,20 +57,22 @@ $this->params['breadcrumbs'][] = $this->title;
         <ul style="padding-left:18px">
             <?php if ($model->belge) { ?>
                 <li>
-                    <?= Html::a($model->belge, ['pdfgoster', 'id' => $model->id], [
+                    <?php $legacyBelgeMevcut = SecureFileStorage::exists($model->belge, 'events', [Yii::$app->basePath . '/web/uploads/bgys/' . md5('olay')]); ?>
+                    <?= $legacyBelgeMevcut ? Html::a(Html::encode($model->belge), ['pdfgoster', 'id' => $model->id], [
                         'target' => '_blank',
                         'style' => 'color:#337ab7;text-decoration:underline;',
                         'onclick' => "window.open(this.href, '_blank'); return false;",
-                    ]) ?>
+                    ]) : Html::tag('span', 'Belge dosyası eksik – düzenleme ekranından yeniden yükleyin.', ['class' => 'text-danger']) ?>
                 </li>
             <?php } ?>
             <?php foreach ($model->belgeler as $belge) { ?>
                 <li>
-                    <?= Html::a(Html::encode($belge->orijinal_ad), ['belgegoster', 'id' => $belge->id], [
+                    <?php $ekBelgeMevcut = SecureFileStorage::exists($belge->dosya, 'events', [Yii::$app->basePath . '/web/uploads/bgys/' . md5('olay')]); ?>
+                    <?= $ekBelgeMevcut ? Html::a(Html::encode($belge->orijinal_ad), ['belgegoster', 'id' => $belge->id], [
                         'target' => '_blank',
                         'style' => 'color:#337ab7;text-decoration:underline;',
                         'onclick' => "window.open(this.href, '_blank'); return false;",
-                    ]) ?>
+                    ]) : Html::tag('span', Html::encode($belge->orijinal_ad) . ': dosya eksik', ['class' => 'text-danger']) ?>
                 </li>
             <?php } ?>
         </ul>

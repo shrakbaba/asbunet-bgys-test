@@ -47,6 +47,24 @@ class SecureFileStorage
         throw new NotFoundHttpException('Dosya bulunamadı.');
     }
 
+    public static function exists($fileName, $category, array $legacyDirectories = [])
+    {
+        try {
+            $safeName = self::safeFileName($fileName);
+        } catch (NotFoundHttpException $exception) {
+            return false;
+        }
+
+        $directories = array_merge([self::categoryDirectory($category)], $legacyDirectories);
+        foreach ($directories as $directory) {
+            if (is_file(rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $safeName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function delete($fileName, $category, array $legacyDirectories = [])
     {
         if (!$fileName) {
