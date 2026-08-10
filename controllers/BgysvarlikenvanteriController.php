@@ -84,9 +84,10 @@ class BgysvarlikenvanteriController extends Controller
 
     public function actionView($id)
     {
-        return $this->renderAjax('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $viewParams = ['model' => $this->findModel($id)];
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('view', $viewParams)
+            : $this->render('view', $viewParams);
     }
 
     public function actionCreate()
@@ -129,9 +130,10 @@ class BgysvarlikenvanteriController extends Controller
             }
         }
 
-        return $this->renderAjax('update', [
-            'model' => $model,
-        ]);
+        $viewParams = ['model' => $model];
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('update', $viewParams)
+            : $this->render('update', $viewParams);
     }
 
     public function actionDelete($id)
