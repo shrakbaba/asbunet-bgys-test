@@ -5,6 +5,7 @@ use yii\widgets\DetailView;
 use yii\helpers\ArrayHelper;
 use app\models\Bgysbilgisinifi;
 use yii\helpers\bgys;
+use app\models\Bgysvarlikenvanteri;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgysvarlikenvanteri */
@@ -16,6 +17,10 @@ use yii\helpers\bgys;
         'attributes' => [
             //'id',
             'varlik_adi',           
+            [
+                'attribute' => 'asset_type',
+                'value' => Bgysvarlikenvanteri::assetTypeOptions()[$model->asset_type] ?? $model->asset_type,
+            ],
                        
             [
                 'attribute'=>'departman',

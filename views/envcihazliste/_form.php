@@ -10,7 +10,6 @@ use app\models\Envcihazturu;
 use app\models\Userdb;
 use app\models\Userbilgi;
 use app\models\Bgysvarlikenvanteri;
-use app\models\Bgyskategori;
 
 use dosamigos\datepicker\DatePicker;
 use dosamigos\datepicker\DateRangePicker;
@@ -61,11 +60,7 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'bgys_asset_id')->widget(Select2::classname(), [
         'data' => ArrayHelper::map(
             Bgysvarlikenvanteri::find()
-                ->where([
-                    'kategori' => Bgyskategori::find()
-                        ->select('id')
-                        ->where(['adi' => \app\models\Envcihazliste::deviceAssetCategoryNames()]),
-                ])
+                ->where(['asset_type' => Bgysvarlikenvanteri::TYPE_HARDWARE])
                 ->orderBy(['varlik_adi' => SORT_ASC])
                 ->all(),
             'id',

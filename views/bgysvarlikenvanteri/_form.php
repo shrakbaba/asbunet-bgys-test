@@ -16,6 +16,19 @@ use kartik\select2\Select2;
 /* @var $this yii\web\View */
 /* @var $model app\models\Bgysvarlikenvanteri */
 /* @var $form yii\widgets\ActiveForm */
+
+$categoryGroups = [];
+$categoryOptionsByType = [];
+$categoryNamesByType = Bgysvarlikenvanteri::categoryNamesByAssetType();
+foreach (Bgysvarlikenvanteri::assetTypeOptions() as $type => $typeLabel) {
+    $categoryOptions = ArrayHelper::map(
+        Bgyskategori::find()->where(['adi' => $categoryNamesByType[$type]])->orderBy(['adi' => SORT_ASC])->all(),
+        'id',
+        'adi'
+    );
+    $categoryGroups[$typeLabel] = $categoryOptions;
+    $categoryOptionsByType[$type] = $categoryOptions;
+}
 ?>
 
 <div class="bgysvarlikenvanteri-form">
@@ -57,9 +70,17 @@ use kartik\select2\Select2;
     ?>
 </div>  
 <div class="col-lg-6">
+      <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
+        'data' => Bgysvarlikenvanteri::assetTypeOptions(),
+        'options' => ['placeholder' => 'Varlık türü seçin'],
+        'pluginOptions' => ['allowClear' => true],
+        ]);
+    ?>
+</div>
+<div class="col-lg-6">
       <?= $form->field($model, 'kategori')->widget(Select2::classname(), [
-        'data' => ArrayHelper::map(Bgyskategori::find()->all(),'id','adi'),
-        'options' => ['placeholder' => 'Kategorisi',],
+        'data' => $categoryGroups,
+        'options' => ['placeholder' => 'Varlık türüne uygun kategori seçin'],
         'pluginOptions' => [
             'allowClear' => true
         ],
@@ -142,9 +163,16 @@ use kartik\select2\Select2;
 
 <?php
 $ownerTypeInputId = Html::getInputId($model, 'owner_type');
+$assetTypeInputId = Html::getInputId($model, 'asset_type');
+$categoryInputId = Html::getInputId($model, 'kategori');
+$categoryOptionsJson = json_encode($categoryOptionsByType, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 $this->registerJs(<<<JS
 (function () {
     var ownerType = $('#{$ownerTypeInputId}');
+    var assetType = $('#{$assetTypeInputId}');
+    var category = $('#{$categoryInputId}');
+    var categoryOptions = {$categoryOptionsJson};
+    var initialCategory = category.val();
 
     function toggleOwnerFields() {
         var isUnit = ownerType.val() === 'unit';
@@ -155,6 +183,24 @@ $this->registerJs(<<<JS
 
     ownerType.on('change', toggleOwnerFields);
     toggleOwnerFields();
+
+    function refreshCategories(preserveSelection) {
+        var selectedType = assetType.val();
+        var selectedCategory = preserveSelection ? category.val() : null;
+        var options = categoryOptions[selectedType] || {};
+
+        category.empty().append(new Option('', '', false, false));
+        $.each(options, function (id, label) {
+            category.append(new Option(label, id, false, String(id) === String(selectedCategory)));
+        });
+        category.trigger('change.select2');
+    }
+
+    assetType.on('change', function () {
+        refreshCategories(false);
+    });
+    category.val(initialCategory);
+    refreshCategories(true);
 }());
 JS
 );

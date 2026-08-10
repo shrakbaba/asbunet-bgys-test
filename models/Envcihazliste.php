@@ -127,19 +127,9 @@ class Envcihazliste extends \yii\db\ActiveRecord
         }
 
         $asset = Bgysvarlikenvanteri::findOne((int)$this->$attribute);
-        $categoryName = $asset && $asset->kategori0 ? $asset->kategori0->adi : null;
-        if (!in_array($categoryName, self::deviceAssetCategoryNames(), true)) {
+        if ($asset === null || $asset->asset_type !== Bgysvarlikenvanteri::TYPE_HARDWARE) {
             $this->addError($attribute, 'Cihaz yalnız donanım niteliğindeki bir BGYS varlığına bağlanabilir.');
         }
-    }
-
-    public static function deviceAssetCategoryNames()
-    {
-        return [
-            'Ağ ve Sistemler',
-            'IoT',
-            'Taşınabilir Cihaz ve Ortamlar',
-        ];
     }
 
     public function getZimmetHistory()

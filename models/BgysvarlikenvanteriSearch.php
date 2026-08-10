@@ -19,7 +19,7 @@ class BgysvarlikenvanteriSearch extends Bgysvarlikenvanteri
     {
         return [
             [['id', 'bilgi_sinifi', 'kategori', 'gizlilik', 'butunluk', 'erisilebilirlik', 'varlik_degeri'], 'integer'],
-            [['departman', 'varlik_adi', 'lokasyon', 'varlik_sahibi','aciklama'], 'safe'],
+            [['departman', 'varlik_adi', 'lokasyon', 'varlik_sahibi', 'aciklama', 'asset_type'], 'safe'],
         ];
     }
 
@@ -70,6 +70,7 @@ class BgysvarlikenvanteriSearch extends Bgysvarlikenvanteri
             'butunluk' => $this->butunluk,
             'erisilebilirlik' => $this->erisilebilirlik,
             'varlik_degeri' => $this->varlik_degeri,
+            'asset_type' => $this->asset_type,
         ]);
 
         $query->andFilterWhere(['like', 'departman', $this->departman])

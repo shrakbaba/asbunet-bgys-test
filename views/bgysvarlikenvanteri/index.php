@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use kartik\export\ExportMenu;
 use app\models\Bgyskategori;
 use app\models\Bgysbilgisinifi;
+use app\models\Bgysvarlikenvanteri;
 /* @var $this yii\web\View */
 /* @var $searchModel app\models\BgysvarlikenvanteriSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -67,6 +68,15 @@ $gridColumns = [
         'vAlign' => 'middle',
         'width' => '10%',
     ],                        
+    [
+        'attribute' => 'asset_type',
+        'filter' => Bgysvarlikenvanteri::assetTypeOptions(),
+        'value' => function ($data) {
+            return Bgysvarlikenvanteri::assetTypeOptions()[$data->asset_type] ?? $data->asset_type;
+        },
+        'vAlign' => 'middle',
+        'width' => '10%',
+    ],
     [
         'attribute'=>'bilgi_sinifi',
         'format'=>'raw',
