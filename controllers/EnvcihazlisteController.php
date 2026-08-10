@@ -497,6 +497,7 @@ class EnvcihazlisteController extends Controller
         }
 
         $path = SecureFileStorage::find($model->dosya, 'devices', [$this->legacyDeviceDirectory()]);
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'cihaz belgesi indirildi', 'cihaz:' . $model->id);
         return Yii::$app->response->sendFile($path, 'cihaz-belgesi-' . $model->id . '.pdf', [
             'inline' => false,
             'mimeType' => 'application/pdf',

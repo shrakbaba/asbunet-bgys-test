@@ -372,6 +372,7 @@ class BgysfarkindalikquizController extends Controller
             throw new NotFoundHttpException('Eğitim videosu bulunamadı.');
         }
         $path = SecureFileStorage::find($model->video_dosya, 'training-videos', [$this->legacyVideoDirectory()]);
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'eğitim videosu görüntülendi', 'eğitim:' . $model->id);
         return Yii::$app->response->sendFile($path, 'egitim-video-' . $model->id . '.mp4', [
             'mimeType' => 'video/mp4',
             'inline' => true,
@@ -386,6 +387,7 @@ class BgysfarkindalikquizController extends Controller
         }
         $path = SecureFileStorage::find($model->quiz_dosya, 'training-documents', [$this->legacyQuizDirectory()]);
         $name = basename(str_replace(["\r", "\n"], '', (string)$model->quiz_orijinal_ad));
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'eğitim quiz belgesi görüntülendi', 'eğitim:' . $model->id);
         return Yii::$app->response->sendFile($path, $name ?: 'egitim-quiz-' . $model->id . '.pdf', [
             'mimeType' => 'application/pdf',
             'inline' => true,

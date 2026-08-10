@@ -240,6 +240,7 @@ class BgysolaykayitController extends Controller
 
         $path = SecureFileStorage::find($model->belge, 'events', [$this->legacyEventDirectory()]);
 
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay belgesi görüntülendi', 'olay:' . $model->id);
         return Yii::$app->response->sendFile($path, 'olay-belgesi-' . $model->id . '.pdf', [
             'mimeType' => 'application/pdf',
             'inline' => true,
@@ -255,6 +256,7 @@ class BgysolaykayitController extends Controller
 
         $path = SecureFileStorage::find($belge->dosya, 'events', [$this->legacyEventDirectory()]);
 
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'olay ek belgesi görüntülendi', 'olay:' . $belge->olay_id . ';belge:' . $belge->id);
         return Yii::$app->response->sendFile($path, $this->safeDownloadName($belge->orijinal_ad, $belge->id), [
             'mimeType' => 'application/pdf',
             'inline' => true,

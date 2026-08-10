@@ -349,6 +349,7 @@ class BgyscihazbakimController extends Controller
             throw new NotFoundHttpException('Belge bulunamadı.');
         }
         $path = SecureFileStorage::find($fileName, 'maintenance', [$this->legacyMaintenanceDirectory()]);
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'bakım belgesi indirildi', 'bakım:' . $model->id . ';tür:' . $type);
         return Yii::$app->response->sendFile($path, $downloadName, [
             'mimeType' => 'application/pdf',
             'inline' => false,

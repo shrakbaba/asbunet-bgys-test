@@ -83,6 +83,7 @@ class BgysfirmabilgiController extends Controller
 
         $path = SecureFileStorage::find($model->belge, 'suppliers', [$this->legacySupplierDirectory()]);
 
+        bgys::logtut($this->id, $this->action->id, Yii::$app->user->id, 'tedarikçi belgesi görüntülendi', 'tedarikçi:' . $model->id);
         return Yii::$app->response->sendFile($path, 'tedarikci-belgesi-' . $model->id . '.pdf', [
             'mimeType' => 'application/pdf',
             'inline' => true,
