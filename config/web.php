@@ -38,7 +38,7 @@ $config = [
             'identityClass' => $params['giristipi'] == 1
                 ? 'Edvlerblog\Adldap2\model\UserDbLdap'
                 : 'app\models\User',
-            'enableAutoLogin' => true,
+            'enableAutoLogin' => false,
             'authTimeout' => $params['sessionTimeout'],
             'absoluteAuthTimeout' => $params['sessionTimeout'],
             'identityCookie' => [
@@ -87,6 +87,24 @@ $config = [
             'rules' => [
                 'dashboard' => 'site/dashboard',
             ],
+        ],
+        'response' => [
+            'class' => yii\web\Response::class,
+            'on beforeSend' => function ($event) {
+                header_remove('X-Powered-By');
+                $headers = $event->sender->headers;
+                $headers->set('X-Content-Type-Options', 'nosniff');
+                $headers->set('X-Frame-Options', 'DENY');
+                $headers->set('Referrer-Policy', 'same-origin');
+                $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+                if (!Yii::$app->user->isGuest) {
+                    $headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+                    $headers->set('Pragma', 'no-cache');
+                }
+                if (Yii::$app->request->isSecureConnection) {
+                    $headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+                }
+            },
         ],
         'assetManager' => [
             'bundles' => [

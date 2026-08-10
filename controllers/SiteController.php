@@ -38,6 +38,13 @@ class SiteController extends Controller
     public function behaviors()
     {
         return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'logout' => ['POST'],
+                    'vcenter' => ['POST'],
+                ],
+            ],
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -97,35 +104,31 @@ class SiteController extends Controller
 
     public function actionVcenter()
     {
-        if(Yii::$app->request->post()){
-            $ip=Yii::$app->getRequest()->getUserIP();
-            $a=Yii::$app->request->post();
-            $beklenenAnahtar = Yii::$app->params['vcenterWebhookKey'] ?? '';
-            $gelenAnahtar = Yii::$app->request->headers->get('X-BGYS-Webhook-Key', Yii::$app->request->post('key', ''));
-            $beklenenIp = Yii::$app->params['vcenterWebhookIp'] ?? '10.0.31.20';
-            //echo"<pre>";var_dump($a);
-            if ($beklenenAnahtar === '' || $gelenAnahtar === '' || !hash_equals($beklenenAnahtar, $gelenAnahtar) || $ip !== $beklenenIp) {
-                Yii::warning('Yetkisiz vCenter webhook isteği: ' . $ip, 'security');
-                throw new \yii\web\ForbiddenHttpException('Yetkisiz webhook isteği.');
-            }
+        $ip=Yii::$app->getRequest()->getUserIP();
+        $a=Yii::$app->request->post();
+        $beklenenAnahtar = Yii::$app->params['vcenterWebhookKey'] ?? '';
+        $gelenAnahtar = Yii::$app->request->headers->get('X-BGYS-Webhook-Key', Yii::$app->request->post('key', ''));
+        $beklenenIp = Yii::$app->params['vcenterWebhookIp'] ?? '10.0.31.20';
+        if ($beklenenAnahtar === '' || $gelenAnahtar === '' || !hash_equals($beklenenAnahtar, $gelenAnahtar) || $ip !== $beklenenIp) {
+            Yii::warning('Yetkisiz vCenter webhook isteği: ' . $ip, 'security');
+            throw new \yii\web\ForbiddenHttpException('Yetkisiz webhook isteği.');
+        }
 
-            if (isset($a['vm'])) {
-                $model = new Yenihostbildir();
-                //$model->json=$ip;
-                $model->json=json_encode($a);
-                $model->zabbix=0;
-                $model->kaspersky=0;
-                $model->ipmanage=0;
-                $model->paloalto=0;
-                $model->vm_name=$a['vm'];
+        if (isset($a['vm'])) {
+            $model = new Yenihostbildir();
+            $model->json=json_encode($a);
+            $model->zabbix=0;
+            $model->kaspersky=0;
+            $model->ipmanage=0;
+            $model->paloalto=0;
+            $model->vm_name=$a['vm'];
 
-                if ($model->save()) {
-                    bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,1,'Vcenter trigger',$a['vm'].' vm created');
+            if ($model->save()) {
+                bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,1,'Vcenter trigger',$a['vm'].' vm created');
 
-                    $maillistesi=bgys::mailGrubu('yeniVm');
-                    bgys::yenivm($maillistesi, $a['vm']);
+                $maillistesi=bgys::mailGrubu('yeniVm');
+                bgys::yenivm($maillistesi, $a['vm']);
 
-                }
             }
         }
     }
