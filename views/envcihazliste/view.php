@@ -40,6 +40,26 @@ echo DetailView::widget([
             'value' => $model->bgysAsset ? $model->bgysAsset->varlik_adi : '(Bağlı değil)',
         ],
         [
+            'attribute' => 'license_type',
+            'value' => \app\models\Envcihazliste::licenseTypeOptions()[$model->license_type] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        ['attribute' => 'license_quantity', 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'license_start_date', 'format' => ['date', 'php:d/m/Y'], 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'license_end_date', 'format' => ['date', 'php:d/m/Y'], 'visible' => $model->isSoftwareType()],
+        [
+            'attribute' => 'hosting_environment',
+            'value' => \app\models\Envcihazliste::hostingEnvironmentOptions()[$model->hosting_environment] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        ['attribute' => 'hosting_detail', 'visible' => $model->isSoftwareType()],
+        ['attribute' => 'supplier_name', 'visible' => $model->isSoftwareType()],
+        [
+            'attribute' => 'lifecycle_status',
+            'value' => \app\models\Envcihazliste::lifecycleStatusOptions()[$model->lifecycle_status] ?? 'Belirtilmemiş',
+            'visible' => $model->isSoftwareType(),
+        ],
+        [
             'attribute' => 'alim_tarihi',
             'format' => ['date', 'php:d/m/Y']
         ], 'duyuru6',

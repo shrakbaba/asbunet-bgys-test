@@ -82,6 +82,38 @@ $assetQuery = Bgysvarlikenvanteri::find();
         'pluginOptions' => ['allowClear' => true],
     ])->hint('Seçilen cihaz türünün sınıfına uygun BGYS varlıkları gösterilir. Tür sınıflandırılmamışsa seçenek gelmez.') ?>
 
+    <div id="software-inventory-fields" style="<?= $selectedType && $selectedType->asset_type === Bgysvarlikenvanteri::TYPE_SOFTWARE ? '' : 'display:none;' ?>">
+        <div class="panel panel-info">
+            <div class="panel-heading"><strong>Yazılım Lisans ve Barındırma Bilgileri</strong></div>
+            <div class="panel-body">
+                <?= $form->field($model, 'license_type')->widget(Select2::classname(), [
+                    'data' => \app\models\Envcihazliste::licenseTypeOptions(),
+                    'options' => ['placeholder' => 'Lisans türünü seçin'],
+                    'pluginOptions' => ['allowClear' => true],
+                ]) ?>
+                <?= $form->field($model, 'license_quantity')->textInput(['type' => 'number', 'min' => 1]) ?>
+                <div class="row">
+                    <div class="col-md-6"><?= $form->field($model, 'license_start_date')->input('date') ?></div>
+                    <div class="col-md-6"><?= $form->field($model, 'license_end_date')->input('date') ?></div>
+                </div>
+                <?= $form->field($model, 'hosting_environment')->widget(Select2::classname(), [
+                    'data' => \app\models\Envcihazliste::hostingEnvironmentOptions(),
+                    'options' => ['placeholder' => 'Barındırma ortamını seçin'],
+                    'pluginOptions' => ['allowClear' => true],
+                ]) ?>
+                <?= $form->field($model, 'hosting_detail')->textInput(['maxlength' => true])
+                    ->hint('Sunucu, veri merkezi, bulut hizmeti veya SaaS hizmetinin doğrulanmış adı.') ?>
+                <?= $form->field($model, 'supplier_name')->textInput(['maxlength' => true])
+                    ->hint('Marka/üreticiden farklıysa satın alma veya hizmet tedarikçisi.') ?>
+                <?= $form->field($model, 'lifecycle_status')->widget(Select2::classname(), [
+                    'data' => \app\models\Envcihazliste::lifecycleStatusOptions(),
+                    'options' => ['placeholder' => 'Yaşam döngüsü durumunu seçin'],
+                    'pluginOptions' => ['allowClear' => true],
+                ]) ?>
+            </div>
+        </div>
+    </div>
+
    
     <?= $form->field($model, 'alim_tarihi')->textInput()->label('Garanti Süresi')->widget(DateRangePicker::className(), [
         'attributeTo' => 'garanti_bitis', 
@@ -182,6 +214,10 @@ $this->registerJs(<<<JS
     var model = $('#{$modelInput}');
     var asset = $('#{$assetInput}');
 
+    function toggleSoftwareFields(assetType) {
+        $('#software-inventory-fields').toggle(assetType === 'software');
+    }
+
     function fill(select, rows, selectedValue, emptyText) {
         var placeholder = (!rows || rows.length === 0) && emptyText ? emptyText : '';
         select.empty().append(new Option(placeholder, '', false, false));
@@ -199,6 +235,7 @@ $this->registerJs(<<<JS
             return;
         }
         $.getJSON('{$catalogUrl}', {typeId: type.val(), brandId: brandId || ''}).done(function (data) {
+            toggleSoftwareFields(data.assetType);
             if (selectedBrand !== false) {
                 fill(brand, data.brands, selectedBrand, 'Bu cihaz türü için marka tanımlanmamış');
                 fill(asset, data.assets, selectedAsset, 'Bu sınıfa uygun BGYS varlığı tanımlanmamış');
@@ -207,7 +244,10 @@ $this->registerJs(<<<JS
         });
     }
 
-    type.on('change', function () { requestCatalog(null, null, null, null); });
+    type.on('change', function () {
+        toggleSoftwareFields(null);
+        requestCatalog(null, null, null, null);
+    });
     brand.on('change', function () {
         if (!brand.val()) { fill(model, [], null, 'Önce marka seçin'); return; }
         requestCatalog(brand.val(), false, null, false);

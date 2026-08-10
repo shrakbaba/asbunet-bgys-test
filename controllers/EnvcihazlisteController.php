@@ -430,6 +430,12 @@ class EnvcihazlisteController extends Controller
             case 'legacy':
                 $query->andWhere(['is_legacy' => 1]);
                 break;
+            case 'software':
+                $query->innerJoinWith('cihazTuru')->andWhere(['env_cihaz_turu.asset_type' => 'software'])
+                    ->andWhere(['or',
+                        ['license_type' => null], ['hosting_environment' => null], ['lifecycle_status' => null],
+                    ]);
+                break;
         }
 
         $summaryQuery = Envcihazliste::find();
@@ -441,6 +447,10 @@ class EnvcihazlisteController extends Controller
             'document' => (int)(clone $summaryQuery)->where(['or', ['dosya' => null], ['dosya' => '']])->count(),
             'expired' => (int)(clone $summaryQuery)->where(['<', 'garanti_bitis', date('Y-m-d')])->count(),
             'legacy' => (int)(clone $summaryQuery)->where(['is_legacy' => 1])->count(),
+            'software' => (int)Envcihazliste::find()->alias('l')->innerJoin('env_cihaz_turu t', 't.id=l.cihaz_turu_id')
+                ->where(['t.asset_type' => 'software'])->andWhere(['or',
+                    ['l.license_type' => null], ['l.hosting_environment' => null], ['l.lifecycle_status' => null],
+                ])->count(),
         ];
 
         return $this->render('data-quality', [

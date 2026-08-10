@@ -20,6 +20,7 @@ $cards = [
     'document' => ['Belge Eksik', $summary['document'], 'info'],
     'expired' => ['Süresi Geçmiş', $summary['expired'], 'danger'],
     'legacy' => ['Aktarılan Eski Kayıt', $summary['legacy'], 'default'],
+    'software' => ['Yazılım Bilgisi Eksik', $summary['software'], 'warning'],
 ];
 ?>
 
@@ -57,6 +58,9 @@ $cards = [
                     if (!trim((string)$model->dosya)) $items[] = '<span class="label label-info">Belge</span>';
                     if ($model->garanti_bitis && $model->garanti_bitis < date('Y-m-d')) $items[] = '<span class="label label-danger">Süre geçmiş</span>';
                     if ($model->is_legacy) $items[] = '<span class="label label-default">Eski kayıt</span>';
+                    if ($model->isSoftwareType() && (!$model->license_type || !$model->hosting_environment || !$model->lifecycle_status)) {
+                        $items[] = '<span class="label label-warning">Yazılım bilgisi</span>';
+                    }
                     return implode(' ', $items) ?: '<span class="label label-success">Tam</span>';
                 },
             ],
