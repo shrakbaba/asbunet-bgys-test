@@ -83,16 +83,18 @@ td {
                 'template' => '{view}{update}{delete}' ,  
                 'buttons' => [                                      
                     'view' => function ($url,$model) {
-                        return  ( 
-                            // Html::a('<span class="glyphicon glyphicon-eye-open">', ['view','id'=>$model->id], ['class' => 'btn btn-success','title'=>"İncele"] )
-
-                            Html::button('<span class="glyphicon glyphicon-eye-open">', ['value' => Url::to(['view','id'=>$model->id]),'class' => 'modalButton4 btn btn-success btn-xs' ,'title'=>"İncele"])                      
-                            );
+                        return Html::a('<span class="glyphicon glyphicon-eye-open"></span>', ['view', 'id' => $model->id], [
+                            'class' => 'btn btn-success btn-xs',
+                            'title' => 'İncele',
+                            'data-pjax' => '0',
+                        ]);
                          },
                     'update' => function ($url,$model) {
-                        return  ( 
-                            Html::button('<span class="glyphicon glyphicon-pencil">', ['value' => Url::to(['update','id'=>$model->id]),'class' => 'modalButton3 btn btn-warning btn-xs' ,'title'=>"Güncelle"])                         
-                            );
+                        return Html::a('<span class="glyphicon glyphicon-pencil"></span>', ['update', 'id' => $model->id], [
+                            'class' => 'btn btn-warning btn-xs',
+                            'title' => 'Güncelle',
+                            'data-pjax' => '0',
+                        ]);
                          },
                     'delete' => function ($url,$model) {
                         return  (  

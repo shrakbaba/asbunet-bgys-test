@@ -69,9 +69,13 @@ class BgysfirmabilgiController extends Controller
 
     public function actionView($id)
     {
-        return $this->renderAjax('view', [
+        $params = [
             'model' => $this->findModel($id),
-        ]);
+        ];
+
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax('view', $params)
+            : $this->render('view', $params);
     }
 
     public function actionBelge($id)
@@ -151,9 +155,7 @@ class BgysfirmabilgiController extends Controller
 
             $model->file = UploadedFile::getInstance($model, 'file');
             if (!$model->validate()) {
-                return $this->renderAjax('update', [
-                    'model' => $model,
-                ]);
+                return $this->renderSupplierForm('update', $model);
             }
 
             if ($model->faaliyet_alani) {
@@ -175,9 +177,7 @@ class BgysfirmabilgiController extends Controller
                 } 
         }
 
-        return $this->renderAjax('update', [
-            'model' => $model,
-        ]);
+        return $this->renderSupplierForm('update', $model);
     }
 
     public function actionDelete($id)
@@ -264,5 +264,14 @@ class BgysfirmabilgiController extends Controller
     private function legacySupplierDirectory()
     {
         return Yii::$app->basePath . '/web/uploads/bgys/' . md5('firma');
+    }
+
+    private function renderSupplierForm($view, Bgysfirmabilgi $model)
+    {
+        $params = ['model' => $model];
+
+        return Yii::$app->request->isAjax
+            ? $this->renderAjax($view, $params)
+            : $this->render($view, $params);
     }
 }

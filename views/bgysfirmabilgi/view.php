@@ -9,6 +9,11 @@ use yii\helpers\bgys;
 ?>
 <div class="firmabilgi-view">
 
+    <p>
+        <?= Html::a('Tedarikçi Listesine Dön', ['index'], ['class' => 'btn btn-default']) ?>
+        <?= Html::a('Düzenle', ['update', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
+    </p>
+
 
     <?= DetailView::widget([
         'model' => $model,
