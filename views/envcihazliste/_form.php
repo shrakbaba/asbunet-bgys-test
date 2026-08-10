@@ -182,8 +182,9 @@ $this->registerJs(<<<JS
     var model = $('#{$modelInput}');
     var asset = $('#{$assetInput}');
 
-    function fill(select, rows, selectedValue) {
-        select.empty().append(new Option('', '', false, false));
+    function fill(select, rows, selectedValue, emptyText) {
+        var placeholder = (!rows || rows.length === 0) && emptyText ? emptyText : '';
+        select.empty().append(new Option(placeholder, '', false, false));
         $.each(rows || [], function (_, row) {
             select.append(new Option(row.text, row.id, false, String(row.id) === String(selectedValue)));
         });
@@ -192,20 +193,23 @@ $this->registerJs(<<<JS
 
     function requestCatalog(brandId, selectedBrand, selectedModel, selectedAsset) {
         if (!type.val()) {
-            fill(brand, [], null); fill(model, [], null); fill(asset, [], null); return;
+            fill(brand, [], null, 'Önce cihaz türü seçin');
+            fill(model, [], null, 'Önce cihaz türü ve marka seçin');
+            fill(asset, [], null, 'Önce cihaz türü seçin');
+            return;
         }
         $.getJSON('{$catalogUrl}', {typeId: type.val(), brandId: brandId || ''}).done(function (data) {
             if (selectedBrand !== false) {
-                fill(brand, data.brands, selectedBrand);
-                fill(asset, data.assets, selectedAsset);
+                fill(brand, data.brands, selectedBrand, 'Bu cihaz türü için marka tanımlanmamış');
+                fill(asset, data.assets, selectedAsset, 'Bu sınıfa uygun BGYS varlığı tanımlanmamış');
             }
-            fill(model, data.models, selectedModel);
+            fill(model, data.models, selectedModel, brandId ? 'Bu marka için model tanımlanmamış' : 'Önce marka seçin');
         });
     }
 
     type.on('change', function () { requestCatalog(null, null, null, null); });
     brand.on('change', function () {
-        if (!brand.val()) { fill(model, [], null); return; }
+        if (!brand.val()) { fill(model, [], null, 'Önce marka seçin'); return; }
         requestCatalog(brand.val(), false, null, false);
     });
 }());
