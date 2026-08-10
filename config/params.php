@@ -16,6 +16,8 @@ $params = [
     'snmpReadCommunity' => getenv('BGYS_SNMP_READ_COMMUNITY') ?: '',
     'snmpWriteCommunity' => getenv('BGYS_SNMP_WRITE_COMMUNITY') ?: '',
     'sessionTimeout' => (int)(getenv('BGYS_SESSION_TIMEOUT') ?: 3600),
+    'loginMaxAttempts' => (int)(getenv('BGYS_LOGIN_MAX_ATTEMPTS') ?: 5),
+    'loginWindowSeconds' => (int)(getenv('BGYS_LOGIN_WINDOW_SECONDS') ?: 900),
     'secureCookies' => getenv('BGYS_SECURE_COOKIES') === '0' ? false : true,
     'ldapPort' => (int)(getenv('BGYS_LDAP_PORT') ?: 389),
     'ldapUseSsl' => getenv('BGYS_LDAP_USE_SSL') === '1' ? true : false,

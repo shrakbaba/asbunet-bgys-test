@@ -30,6 +30,7 @@ use app\models\Bgysfirmadegerlendirme;
 use app\models\Yenihostbildir;
 use app\models\Bgysfarkindalikegitim;
 use app\models\Bgysfarkindalikquiz;
+use app\components\LoginRateLimiter;
 
 
 class SiteController extends Controller
@@ -142,7 +143,8 @@ class SiteController extends Controller
 
         if ($model->load(Yii::$app->request->post()) ) {
 
-            if ($model->login()) {
+            $loginAllowed = $this->loginAllowed($model);
+            if ($loginAllowed && $model->login()) {
                 //echo ";adsda";exit;
                 //echo "asdsadwqeqead234as";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
@@ -156,11 +158,13 @@ class SiteController extends Controller
                     return $this->redirect('/site/index');
                 }
             }
-            bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
-                'actor' => $model->username,
-                'result' => 'failure',
-                'record_type' => 'authentication',
-            ]);
+            if ($loginAllowed) {
+                bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                    'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+                    'result' => 'failure',
+                    'record_type' => 'authentication',
+                ]);
+            }
         }
         return $this->render('login', [
             'model' => $model,
@@ -180,7 +184,8 @@ class SiteController extends Controller
         $model = new LoginForm();
 
         if ($model->load(Yii::$app->request->post()) ) {
-            if ($model->login()) {
+            $loginAllowed = $this->loginAllowed($model);
+            if ($loginAllowed && $model->login()) {
                 //echo ";adsda";exit;
                 Userbilgi::adBilgileriniSenkronla(Yii::$app->user->identity);
                 bgys::logtut(Yii::$app->controller->id,Yii::$app->controller->action->id,Yii::$app->user->identity->id,'giris yapti','', [
@@ -193,11 +198,13 @@ class SiteController extends Controller
                     return $this->redirect('/site/index');
                 }
             }
-            bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
-                'actor' => $model->username,
-                'result' => 'failure',
-                'record_type' => 'authentication',
-            ]);
+            if ($loginAllowed) {
+                bgys::logtut($this->id, $this->action->id, null, 'başarısız giriş', '', [
+                    'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+                    'result' => 'failure',
+                    'record_type' => 'authentication',
+                ]);
+            }
         }
         return $this->render('login', [
             'model' => $model,
@@ -211,6 +218,25 @@ class SiteController extends Controller
         ]);
         Yii::$app->user->logout();
         return $this->goHome();
+    }
+
+    private function loginAllowed(LoginForm $model)
+    {
+        $limiter = new LoginRateLimiter(
+            Yii::$app->params['loginMaxAttempts'] ?? 5,
+            Yii::$app->params['loginWindowSeconds'] ?? 900
+        );
+        if ($limiter->isAllowed($model->username, Yii::$app->request->getUserIP())) {
+            return true;
+        }
+
+        $model->addError('password', 'Çok fazla başarısız giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin.');
+        bgys::logtut($this->id, $this->action->id, null, 'giriş geçici olarak engellendi', '', [
+            'actor' => LoginRateLimiter::normalizeIdentity($model->username),
+            'result' => 'failure',
+            'record_type' => 'authentication',
+        ]);
+        return false;
     }
 
     public function actionContact()
