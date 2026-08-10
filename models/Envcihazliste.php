@@ -44,6 +44,7 @@ class Envcihazliste extends \yii\db\ActiveRecord
             [['marka_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmarka::className(), 'targetAttribute' => ['marka_id' => 'id']],
             [['model_id'], 'exist', 'skipOnError' => true, 'targetClass' => Envmodel::className(), 'targetAttribute' => ['model_id' => 'id']],
             [['bgys_asset_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => Bgysvarlikenvanteri::className(), 'targetAttribute' => ['bgys_asset_id' => 'id']],
+            [['bgys_asset_id'], 'validateBgysAssetCategory'],
             //[['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' => Userdb::className(), 'targetAttribute' => ['zimmet' => 'id']],
             (Yii::$app->params['giristipi']==1) 
             ? [['zimmet'], 'exist', 'skipOnError' => true, 'targetClass' =>\Edvlerblog\Adldap2\model\UserDbLdap::className() , 'targetAttribute' => ['zimmet' => 'id']]
@@ -117,6 +118,28 @@ class Envcihazliste extends \yii\db\ActiveRecord
     public function getBgysAsset()
     {
         return $this->hasOne(Bgysvarlikenvanteri::className(), ['id' => 'bgys_asset_id']);
+    }
+
+    public function validateBgysAssetCategory($attribute)
+    {
+        if (!$this->$attribute) {
+            return;
+        }
+
+        $asset = Bgysvarlikenvanteri::findOne((int)$this->$attribute);
+        $categoryName = $asset && $asset->kategori0 ? $asset->kategori0->adi : null;
+        if (!in_array($categoryName, self::deviceAssetCategoryNames(), true)) {
+            $this->addError($attribute, 'Cihaz yalnız donanım niteliğindeki bir BGYS varlığına bağlanabilir.');
+        }
+    }
+
+    public static function deviceAssetCategoryNames()
+    {
+        return [
+            'Ağ ve Sistemler',
+            'IoT',
+            'Taşınabilir Cihaz ve Ortamlar',
+        ];
     }
 
     public function getZimmetHistory()
