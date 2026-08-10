@@ -55,6 +55,8 @@ class Bgysvarlikenvanteri extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['varlik_adi', 'departman', 'bilgi_sinifi', 'lokasyon', 'kategori',
+                'gizlilik', 'butunluk', 'erisilebilirlik'], 'required'],
             [['departman', 'bilgi_sinifi', 'lokasyon', 'kategori', 'gizlilik', 'butunluk', 'erisilebilirlik', 'varlik_degeri'], 'integer'],
             [['owner_user_id', 'created_by'], 'integer'],
             [['source_device_id'], 'integer'],
