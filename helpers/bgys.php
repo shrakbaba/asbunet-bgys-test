@@ -77,7 +77,7 @@ class bgys
 	public static function varlikdegeri($id)
 	{
 	  $degerler = array(1 =>"Düşük" ,2=>"Orta",3=>'Yüksek',4=>'Çok Yüksek');
-	  return $degerler[$id];
+	  return $degerler[$id] ?? 'Belirtilmemiş';
 	}
 
 	public static function tedarikcitipi($id)
