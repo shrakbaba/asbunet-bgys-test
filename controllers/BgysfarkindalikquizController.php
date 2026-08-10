@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\components\SecureFileStorage;
 use app\models\Bgysfarkindalikegitim;
 use app\models\Bgysfarkindalikquiz;
 use app\models\BgysfarkindalikquizSearch;
@@ -44,7 +45,7 @@ class BgysfarkindalikquizController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['create','egitim','egitimtamamlandi','quizdokuman'],
+                        'actions' => ['create','egitim','egitimtamamlandi','quizdokuman','video','quizfile'],
                         'roles' => ['BGYS_Ekip_Uyesi'],
                     ],
                     [
@@ -252,6 +253,7 @@ class BgysfarkindalikquizController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             $model->videoFile = UploadedFile::getInstance($model, 'videoFile');
+            $model->quizFile = UploadedFile::getInstance($model, 'quizFile');
             $this->quizFormunuModeleAktar($model);
             if ($model->videoFile === null) {
                 $model->addError('videoFile', 'Eğitim videosu yüklenmelidir.');
@@ -272,6 +274,7 @@ class BgysfarkindalikquizController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             $model->videoFile = UploadedFile::getInstance($model, 'videoFile');
+            $model->quizFile = UploadedFile::getInstance($model, 'quizFile');
             $this->quizFormunuModeleAktar($model);
             if ($this->egitimKaydet($model)) {
                 Yii::$app->session->setFlash('success','Eğitim kaydı güncellendi.');
@@ -320,7 +323,7 @@ class BgysfarkindalikquizController extends Controller
 
     public function actionQuizdokuman($id)
     {
-        $model = $this->findEgitimModel($id);
+        $model = $this->findAccessibleEgitimModel($id);
         $sorular = $model->quiz_json ? json_decode($model->quiz_json, true) : [];
 
         if (!is_array($sorular) || count($sorular) === 0) {
@@ -355,14 +358,38 @@ class BgysfarkindalikquizController extends Controller
         $mpdf->WriteHTML($html);
 
         $filename = preg_replace('/[^A-Za-z0-9_.-]/', '_', $model->baslik) . '_quiz.pdf';
-        $klasor = Yii::$app->basePath . '/web/uploads/bgys/egitim/quiz/generated/';
-        if (!is_dir($klasor)) {
-            mkdir($klasor, 0775, true);
-        }
-        $dosya = 'egitim_' . (int)$model->id . '_quiz.pdf';
-        $mpdf->Output($klasor . $dosya, 'F');
+        $content = $mpdf->Output('', 'S');
+        return Yii::$app->response->sendContentAsFile($content, $filename, [
+            'mimeType' => 'application/pdf',
+            'inline' => true,
+        ]);
+    }
 
-        return $this->redirect('/uploads/bgys/egitim/quiz/generated/' . $dosya . '?v=' . time());
+    public function actionVideo($id)
+    {
+        $model = $this->findAccessibleEgitimModel($id);
+        if (!$model->video_dosya) {
+            throw new NotFoundHttpException('Eğitim videosu bulunamadı.');
+        }
+        $path = SecureFileStorage::find($model->video_dosya, 'training-videos', [$this->legacyVideoDirectory()]);
+        return Yii::$app->response->sendFile($path, 'egitim-video-' . $model->id . '.mp4', [
+            'mimeType' => 'video/mp4',
+            'inline' => true,
+        ]);
+    }
+
+    public function actionQuizfile($id)
+    {
+        $model = $this->findAccessibleEgitimModel($id);
+        if (!$model->quiz_dosya) {
+            throw new NotFoundHttpException('Quiz dosyası bulunamadı.');
+        }
+        $path = SecureFileStorage::find($model->quiz_dosya, 'training-documents', [$this->legacyQuizDirectory()]);
+        $name = basename(str_replace(["\r", "\n"], '', (string)$model->quiz_orijinal_ad));
+        return Yii::$app->response->sendFile($path, $name ?: 'egitim-quiz-' . $model->id . '.pdf', [
+            'mimeType' => 'application/pdf',
+            'inline' => true,
+        ]);
     }
 
     public function actionEgitimsil($id)
@@ -442,26 +469,22 @@ class BgysfarkindalikquizController extends Controller
         throw new NotFoundHttpException('Eğitim kaydı bulunamadı.');
     }
 
+    protected function findAccessibleEgitimModel($id)
+    {
+        $query = Bgysfarkindalikegitim::find()->where(['id' => $id]);
+        if (!Yii::$app->user->can('BGYS_Super_Admin')) {
+            $query->andWhere(['aktif' => 1]);
+        }
+        $model = $query->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('Eğitim kaydı bulunamadı.');
+        }
+        return $model;
+    }
+
     private function egitimKaydet(Bgysfarkindalikegitim $model)
     {
-        if ($model->videoFile) {
-            $klasor = Yii::$app->basePath . '/web/uploads/bgys/egitim/';
-            if (!is_dir($klasor)) {
-                mkdir($klasor, 0775, true);
-            }
-            $dosya = date('YmdHis') . '_' . preg_replace('/[^A-Za-z0-9_.-]/', '_', $model->videoFile->baseName) . '.' . $model->videoFile->extension;
-            $model->video_dosya = $dosya;
-        }
-        if ($model->quizFile) {
-            $klasor = Yii::$app->basePath . '/web/uploads/bgys/egitim/quiz/';
-            if (!is_dir($klasor)) {
-                mkdir($klasor, 0775, true);
-            }
-            $dosya = date('YmdHis') . '_' . preg_replace('/[^A-Za-z0-9_.-]/', '_', $model->quizFile->baseName) . '.' . $model->quizFile->extension;
-            $model->quiz_dosya = $dosya;
-            $model->quiz_orijinal_ad = $model->quizFile->name;
-        }
-        if (!$model->video_dosya) {
+        if (!$model->video_dosya && !$model->videoFile) {
             $model->addError('videoFile', 'Eğitim videosu yüklenmelidir.');
             return false;
         }
@@ -477,16 +500,48 @@ class BgysfarkindalikquizController extends Controller
             return false;
         }
 
-        if ($model->videoFile && !$model->videoFile->saveAs(Yii::$app->basePath . '/web/uploads/bgys/egitim/' . $model->video_dosya)) {
-            $model->addError('videoFile', 'Video dosyası kaydedilemedi.');
-            return false;
-        }
-        if ($model->quizFile && !$model->quizFile->saveAs(Yii::$app->basePath . '/web/uploads/bgys/egitim/quiz/' . $model->quiz_dosya)) {
-            $model->addError('quizFile', 'Quiz dosyası kaydedilemedi.');
+        $oldVideo = $model->getOldAttribute('video_dosya');
+        $oldQuiz = $model->getOldAttribute('quiz_dosya');
+        $newFiles = [];
+        try {
+            if ($model->videoFile) {
+                $model->video_dosya = SecureFileStorage::store($model->videoFile, 'training-videos', 'mp4');
+                $newFiles[] = ['name' => $model->video_dosya, 'category' => 'training-videos'];
+            }
+            if ($model->quizFile) {
+                $model->quiz_dosya = SecureFileStorage::storePdf($model->quizFile, 'training-documents');
+                $model->quiz_orijinal_ad = $model->quizFile->name;
+                $newFiles[] = ['name' => $model->quiz_dosya, 'category' => 'training-documents'];
+            }
+            if (!$model->save(false)) {
+                throw new \RuntimeException('Eğitim kaydı kaydedilemedi.');
+            }
+        } catch (\Throwable $exception) {
+            foreach ($newFiles as $newFile) {
+                SecureFileStorage::delete($newFile['name'], $newFile['category']);
+            }
+            Yii::error($exception, 'training-file');
+            $model->addError('videoFile', 'Eğitim dosyaları kaydedilemedi.');
             return false;
         }
 
-        return $model->save(false);
+        if ($oldVideo && $oldVideo !== $model->video_dosya) {
+            SecureFileStorage::delete($oldVideo, 'training-videos', [$this->legacyVideoDirectory()]);
+        }
+        if ($oldQuiz && $oldQuiz !== $model->quiz_dosya) {
+            SecureFileStorage::delete($oldQuiz, 'training-documents', [$this->legacyQuizDirectory()]);
+        }
+        return true;
+    }
+
+    private function legacyVideoDirectory()
+    {
+        return Yii::$app->basePath . '/web/uploads/bgys/egitim';
+    }
+
+    private function legacyQuizDirectory()
+    {
+        return Yii::$app->basePath . '/web/uploads/bgys/egitim/quiz';
     }
 
     private function quizFormunuModeleAktar(Bgysfarkindalikegitim $model)

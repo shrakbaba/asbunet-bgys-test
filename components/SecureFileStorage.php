@@ -10,10 +10,20 @@ class SecureFileStorage
 {
     public static function storePdf(UploadedFile $file, $category)
     {
+        return self::store($file, $category, 'pdf');
+    }
+
+    public static function store(UploadedFile $file, $category, $extension)
+    {
+        $extension = strtolower((string)$extension);
+        if (!in_array($extension, ['pdf', 'mp4'], true) || strtolower($file->extension) !== $extension) {
+            throw new \InvalidArgumentException('Geçersiz dosya uzantısı.');
+        }
+
         $directory = self::categoryDirectory($category);
         self::ensureDirectory($directory);
 
-        $fileName = Yii::$app->security->generateRandomString(32) . '.pdf';
+        $fileName = Yii::$app->security->generateRandomString(32) . '.' . $extension;
         $path = $directory . DIRECTORY_SEPARATOR . $fileName;
         if (!$file->saveAs($path, false)) {
             throw new \RuntimeException('Dosya güvenli depoya kaydedilemedi.');
